@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGA — Sistema de Control Migratorio Fronterizo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1A56A0;
+  --blue-dark:#133f7a;
+  --blue-light:#eff6ff;
+  --green:#1D7D4B;
+  --green-light:#dcfce7;
+  --red:#c0392b;
+  --red-light:#fee2e2;
+  --yellow:#854d0e;
+  --yellow-light:#fef9c3;
+  --text:#1e293b;
+  --text-muted:#64748b;
+  --border:#e2e8f0;
+  --bg:#E8EDF4;
+  --white:#fff;
+  --surface:#f8fafc;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);min-height:100vh;color:var(--text)}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--blue);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-brand{display:flex;align-items:center;gap:12px}
+.topbar-brand-logo{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:9px;display:flex;align-items:center;justify-content:center}
+.topbar-brand-logo svg{width:22px;height:22px;stroke:#fff;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.topbar-brand-name{font-size:18px;font-weight:700;color:#fff;letter-spacing:.5px}
+.topbar-brand-sub{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:18px}
+.topbar-info{text-align:right}
+.topbar-info strong{display:block;font-size:13px;color:#fff;font-weight:600}
+.topbar-info span{font-size:11px;color:rgba(255,255,255,.6)}
+.topbar-avatar{width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.topbar-avatar svg{width:20px;height:20px;stroke:#fff;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.status-dot{width:9px;height:9px;border-radius:50%;background:#22c55e;margin-right:6px;display:inline-block;box-shadow:0 0 0 2px rgba(34,197,94,.25)}
+
+.body{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar-section{padding:16px 12px 4px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:2px 8px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-muted);border:none;background:transparent;width:calc(100% - 16px);text-align:left;transition:background .15s}
+.nav-item:hover{background:var(--blue-light);color:var(--blue)}
+.nav-item.active{background:var(--blue-light);color:var(--blue);font-weight:600}
+.nav-item svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.nav-item .badge-count{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;min-width:20px;text-align:center}
+.sidebar-footer{margin-top:auto;padding:14px;border-top:1px solid var(--border)}
+.sidebar-user{display:flex;align-items:center;gap:10px}
+.sidebar-user-avatar{width:36px;height:36px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sidebar-user-avatar svg{width:18px;height:18px;stroke:var(--blue);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sidebar-user-info strong{font-size:12px;color:var(--text);display:block;font-weight:600}
+.sidebar-user-info span{font-size:11px;color:var(--text-muted)}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.page{display:none;flex-direction:column;flex:1;overflow:hidden}
+.page.active{display:flex}
+.page-header{padding:20px 28px 0;flex-shrink:0}
+.page-title{font-size:22px;font-weight:700;color:var(--text)}
+.page-sub{font-size:13px;color:var(--text-muted);margin-top:2px}
+.page-body{flex:1;overflow-y:auto;padding:20px 28px 28px}
+
+/* ── COMPONENTS ── */
+.card{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:16px}
+.card-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px}
+.card-row{display:flex;gap:16px;margin-bottom:16px}
+.card-row:last-child{margin-bottom:0}
+
+.field-row{display:flex;flex-direction:column;gap:5px;flex:1}
+.field-label{font-size:12px;color:var(--text-muted);font-weight:500}
+.field-input{height:42px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);padding:0 12px;font-size:14px;color:var(--text);display:flex;align-items:center;cursor:text}
+.field-input.placeholder{color:#94a3b8}
+.field-input.error{border-color:#ef4444;background:#fff5f5}
+.field-select{height:42px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);padding:0 12px;font-size:14px;color:var(--text);display:flex;align-items:center;justify-content:space-between}
+.field-select svg{width:16px;height:16px;stroke:var(--text-muted);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+.btn-primary{height:42px;background:var(--blue);color:#fff;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;cursor:pointer;border:none;padding:0 20px;gap:8px}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-secondary{height:42px;background:var(--white);color:var(--blue);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;cursor:pointer;border:2px solid var(--blue);padding:0 18px;gap:8px}
+.btn-success{height:42px;background:var(--green);color:#fff;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;cursor:pointer;border:none;padding:0 20px;gap:8px}
+.btn-danger{height:42px;background:var(--red);color:#fff;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;cursor:pointer;border:none;padding:0 20px;gap:8px}
+.btn-sm{height:34px;border-radius:8px;font-size:13px;padding:0 14px}
+.btn-row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-green{background:var(--green-light);color:#166534}
+.badge-yellow{background:var(--yellow-light);color:var(--yellow)}
+.badge-red{background:var(--red-light);color:#991b1b}
+.badge-gray{background:#f1f5f9;color:#475569}
+
+.alert{padding:12px 16px;border-radius:10px;display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+.alert p{font-size:13px;line-height:1.55}
+.alert-icon svg{width:18px;height:18px;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;margin-top:1px}
+.alert-info{background:#eff6ff;border-left:3px solid var(--blue)}
+.alert-info p{color:#1e40af}
+.alert-info .alert-icon svg{stroke:var(--blue)}
+.alert-warn{background:var(--yellow-light);border-left:3px solid #f59e0b}
+.alert-warn p{color:var(--yellow)}
+.alert-warn .alert-icon svg{stroke:#f59e0b}
+.alert-success{background:var(--green-light);border-left:3px solid var(--green)}
+.alert-success p{color:#166534}
+.alert-success .alert-icon svg{stroke:var(--green)}
+.alert-error{background:var(--red-light);border-left:3px solid var(--red)}
+.alert-error p{color:#991b1b}
+.alert-error .alert-icon svg{stroke:var(--red)}
+
+/* Tables */
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;background:var(--white)}
+thead th{background:var(--surface);padding:11px 14px;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1px solid var(--border)}
+tbody td{padding:12px 14px;font-size:13px;color:var(--text);border-bottom:1px solid #f8fafc}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f8fafc}
+.td-action{display:flex;gap:6px;align-items:center}
+
+/* Step bar */
+.step-bar{display:flex;align-items:center;margin-bottom:20px}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.step-dot.done{background:var(--green);color:#fff}
+.step-dot.active{background:var(--blue);color:#fff}
+.step-dot.inactive{background:var(--border);color:#94a3b8}
+.step-line{flex:1;height:2px;background:var(--border)}
+.step-line.done{background:var(--green)}
+.step-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.step-wrap span{font-size:10px;color:var(--text-muted);white-space:nowrap}
+.step-wrap span.active{color:var(--blue);font-weight:600}
+.step-wrap span.done{color:var(--green);font-weight:600}
+
+/* Validation rows */
+.val-row{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid #f1f5f9}
+.val-row:last-child{border-bottom:none}
+.val-dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.val-dot svg{width:20px;height:20px;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.val-dot.ok{background:var(--green-light)}
+.val-dot.ok svg{stroke:#166534}
+.val-dot.checking{background:#dbeafe}
+.val-dot.checking svg{stroke:#1e40af}
+.val-dot.warn{background:var(--yellow-light)}
+.val-dot.warn svg{stroke:var(--yellow)}
+.val-dot.error{background:var(--red-light)}
+.val-dot.error svg{stroke:#991b1b}
+.val-info{flex:1}
+.val-name{font-size:14px;font-weight:600;color:var(--text)}
+.val-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+
+/* Stat cards */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:18px;display:flex;flex-direction:column;gap:8px}
+.stat-card-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.stat-card-icon svg{width:24px;height:24px;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.stat-card-val{font-size:28px;font-weight:700;color:var(--text)}
+.stat-card-label{font-size:12px;color:var(--text-muted)}
+.stat-card-delta{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.delta-up{background:var(--green-light);color:#166534}
+.delta-down{background:var(--red-light);color:#991b1b}
+
+/* Log rows */
+.log-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f8fafc;font-size:12px}
+.log-row:last-child{border-bottom:none}
+.log-time{color:var(--text-muted);white-space:nowrap;min-width:54px}
+.log-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.log-text{color:var(--text);line-height:1.45;flex:1}
+.log-user{color:var(--text-muted)}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.filter-bar input[type=text]{height:38px;border-radius:9px;border:1.5px solid var(--border);background:var(--white);padding:0 12px;font-size:13px;color:var(--text);width:240px}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:6px 14px;border-radius:20px;font-size:12px;border:1.5px solid var(--border);color:var(--text-muted);background:var(--white);cursor:pointer;font-weight:500}
+.chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* Role badge */
+.role-badge{display:inline-flex;gap:5px;align-items:center;font-size:11px;padding:4px 10px;border-radius:6px;font-weight:600;border:1.5px solid}
+.role-admin{background:#fdf4ff;color:#7e22ce;border-color:#e9d5ff}
+.role-op{background:#eff6ff;color:var(--blue);border-color:#bfdbfe}
+.role-viewer{background:#f0fdf4;color:#166534;border-color:#bbf7d0}
+
+/* Toggle */
+.toggle{width:46px;height:26px;background:var(--border);border-radius:13px;position:relative;cursor:pointer;border:none;flex-shrink:0}
+.toggle.on{background:var(--blue)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle.on::after{left:23px}
+
+/* Section divider */
+.divider{height:1px;background:var(--border);margin:18px 0}
+
+/* Integration card */
+.int-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px}
+.int-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.int-icon svg{width:26px;height:26px;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.int-info{flex:1}
+.int-name{font-size:14px;font-weight:700;color:var(--text)}
+.int-desc{font-size:12px;color:var(--text-muted);margin-top:2px}
+.int-status{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+
+/* Charts placeholder */
+.chart-placeholder{background:var(--surface);border-radius:10px;height:180px;display:flex;align-items:flex-end;gap:6px;padding:16px 14px 14px;overflow:hidden}
+.bar{background:var(--blue);border-radius:4px 4px 0 0;flex:1;opacity:.85;min-width:0}
+.bar:nth-child(even){opacity:.55}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar-label{font-size:10px;color:var(--text-muted);white-space:nowrap}
+
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-brand-logo">
+        <svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6L12 2z"/><polyline points="9,12 11,14 15,10"/></svg>
+      </div>
+      <div>
+        <div class="topbar-brand-name">SIGA</div>
+        <div class="topbar-brand-sub">Sistema de Gestión Fronteriza · Paso Los Libertadores</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-info">
+        <strong><span class="status-dot"></span>Sistema operativo</strong>
+        <span>Domingo 14 jun. 2026 · 09:41</span>
+      </div>
+      <div class="topbar-avatar">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-section">Control fronterizo</div>
+      <button class="nav-item active" onclick="go('p-dashboard')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Panel principal
+      </button>
+      <button class="nav-item" onclick="go('p-ingreso')">
+        <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Registro ingreso
+      </button>
+      <button class="nav-item" onclick="go('p-salida')">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Registro salida
+      </button>
+      <button class="nav-item" onclick="go('p-validacion')">
+        <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Validación docs
+        <span class="badge-count">2</span>
+      </button>
+      <button class="nav-item" onclick="go('p-antecedentes')">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Consulta antecedentes
+      </button>
+      <div class="sidebar-section">Vehículos</div>
+      <button class="nav-item" onclick="go('p-vehiculos')">
+        <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Vehículos
+      </button>
+      <div class="sidebar-section">Gestión</div>
+      <button class="nav-item" onclick="go('p-historial')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Historial / Reportes
+      </button>
+      <button class="nav-item" onclick="go('p-integraciones')">
+        <svg viewBox="0 0 24 24"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        Integraciones
+      </button>
+      <button class="nav-item" onclick="go('p-usuarios')">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Usuarios y roles
+      </button>
+      <button class="nav-item" onclick="go('p-logs')">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Bitácora de actividad
+      </button>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="sidebar-user-info">
+            <strong>Ofic. P. Muñoz</strong>
+            <span>PDI · Turno A</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <!-- ① PANEL PRINCIPAL (Dashboard) -->
+      <div class="page active" id="p-dashboard">
+        <div class="page-header">
+          <div class="page-title">Panel principal</div>
+          <div class="page-sub">Resumen del turno · Domingo 14 jun. 2026 · Turno A (06:00–14:00)</div>
+        </div>
+        <div class="page-body">
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-card-icon" style="background:#eff6ff"><svg viewBox="0 0 24 24" style="stroke:var(--blue)"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg></div>
+              <div class="stat-card-val">312</div>
+              <div class="stat-card-label">Ingresos hoy</div>
+              <span class="stat-card-delta delta-up">+18% vs ayer</span>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon" style="background:#f0fdf4"><svg viewBox="0 0 24 24" style="stroke:var(--green)"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+              <div class="stat-card-val">278</div>
+              <div class="stat-card-label">Salidas hoy</div>
+              <span class="stat-card-delta delta-up">+11% vs ayer</span>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon" style="background:#fef9c3"><svg viewBox="0 0 24 24" style="stroke:#854d0e"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+              <div class="stat-card-val">87</div>
+              <div class="stat-card-label">Vehículos procesados</div>
+              <span class="stat-card-delta delta-up">+5% vs ayer</span>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-icon" style="background:var(--red-light)"><svg viewBox="0 0 24 24" style="stroke:var(--red)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+              <div class="stat-card-val">2</div>
+              <div class="stat-card-label">Alertas activas</div>
+              <span class="stat-card-delta delta-down">Requieren acción</span>
+            </div>
+          </div>
+
+          <div class="alert alert-warn">
+            <div class="alert-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <p><strong>Alerta:</strong> Pasajero RUT 9.876.543-2 presenta inconsistencia en validación cruzada PDI–Aduanas. Requiere revisión manual en módulo de Validación.</p>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="card">
+              <div class="card-title">Tránsito por hora — hoy</div>
+              <div class="chart-placeholder">
+                <div class="bar-wrap"><div class="bar" style="height:35%"></div><div class="bar-label">06h</div></div>
+                <div class="bar-wrap"><div class="bar" style="height:55%"></div><div class="bar-label">07h</div></div>
+                <div class="bar-wrap"><div class="bar" style="height:80%"></div><div class="bar-label">08h</div></div>
+                <div class="bar-wrap"><div class="bar" style="height:100%"></div><div class="bar-label">09h</div></div>
+                <div class="bar-wrap"><div class="bar" style="height:70%"></div><div class="bar-label">10h</div></div>
+                <div class="bar-wrap"><div class="bar" style="height:45%"></div><div class="bar-label">11h</div></div>
+                <div class="bar-wrap"><div class="bar" style="height:60%"></div><div class="bar-label">12h</div></div>
+                <div class="bar-wrap"><div class="bar" style="height:30%"></div><div class="bar-label">13h</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Integraciones institucionales</div>
+              <div class="val-row">
+                <div class="val-dot ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="val-info"><div class="val-name">PDI — Policía de Investigaciones</div><div class="val-sub">Conexión activa · última sync 09:40</div></div>
+                <span class="badge badge-green">OK</span>
+              </div>
+              <div class="val-row">
+                <div class="val-dot ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="val-info"><div class="val-name">Aduanas Chile</div><div class="val-sub">Conexión activa · última sync 09:39</div></div>
+                <span class="badge badge-green">OK</span>
+              </div>
+              <div class="val-row">
+                <div class="val-dot warn"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div>
+                <div class="val-info"><div class="val-name">SAG — Servicio Agrícola</div><div class="val-sub">Latencia alta · 1.8 s respuesta</div></div>
+                <span class="badge badge-yellow">Lento</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Últimos registros del turno</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Folio</th><th>Pasajero</th><th>Documento</th><th>Tipo</th><th>Hora</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  <tr><td>#RF-2026-00892</td><td>Carlos Vidal</td><td>RUT 15.234.567-8</td><td><span class="badge badge-blue">Ingreso</span></td><td>09:38</td><td><span class="badge badge-green">Aprobado</span></td><td><div class="td-action"><button class="btn-secondary btn-sm">Ver</button></div></td></tr>
+                  <tr><td>#RF-2026-00891</td><td>Ana Torres</td><td>Pasaporte ARG 123456</td><td><span class="badge badge-gray">Salida</span></td><td>09:35</td><td><span class="badge badge-green">Aprobado</span></td><td><div class="td-action"><button class="btn-secondary btn-sm">Ver</button></div></td></tr>
+                  <tr><td>#RF-2026-00890</td><td>Pedro Rojas</td><td>RUT 9.876.543-2</td><td><span class="badge badge-blue">Ingreso</span></td><td>09:28</td><td><span class="badge badge-red">Alerta</span></td><td><div class="td-action"><button class="btn-danger btn-sm" onclick="go('p-validacion')">Revisar</button></div></td></tr>
+                  <tr><td>#RF-2026-00889</td><td>Laura Méndez</td><td>RUT 18.001.234-5</td><td><span class="badge badge-blue">Ingreso</span></td><td>09:21</td><td><span class="badge badge-green">Aprobado</span></td><td><div class="td-action"><button class="btn-secondary btn-sm">Ver</button></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② REGISTRO INGRESO (RF-01, RF-03, RF-04, RF-19, RF-20) -->
+      <div class="page" id="p-ingreso">
+        <div class="page-header">
+          <div class="page-title">Registro de ingreso al país</div>
+          <div class="page-sub">RF-01 · Registro de pasajeros · Validación automática de documentos</div>
+        </div>
+        <div class="page-body">
+          <div class="step-bar">
+            <div class="step-wrap"><div class="step-dot done">✓</div><span class="done">Identificación</span></div>
+            <div class="step-line done"></div>
+            <div class="step-wrap"><div class="step-dot active">2</div><span class="active">Datos pasajero</span></div>
+            <div class="step-line"></div>
+            <div class="step-wrap"><div class="step-dot inactive">3</div><span>Documentos</span></div>
+            <div class="step-line"></div>
+            <div class="step-wrap"><div class="step-dot inactive">4</div><span>Validación</span></div>
+            <div class="step-line"></div>
+            <div class="step-wrap"><div class="step-dot inactive">5</div><span>Confirmación</span></div>
+          </div>
+
+          <div class="alert alert-info">
+            <div class="alert-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <p>Los datos del pasajero se validarán automáticamente contra PDI, Aduanas y SAG (RF-15, RF-16, RF-17). Se generará alerta si se detectan inconsistencias (RF-20).</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Datos de identidad del pasajero</div>
+            <div class="card-row">
+              <div class="field-row">
+                <div class="field-label">Tipo de documento</div>
+                <div class="field-select">RUT (Chile) <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Número de documento *</div>
+                <div class="field-input">12.345.678-9</div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Nacionalidad</div>
+                <div class="field-select">Chile <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+              </div>
+            </div>
+            <div class="card-row">
+              <div class="field-row">
+                <div class="field-label">Nombre *</div>
+                <div class="field-input">María</div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Apellido paterno *</div>
+                <div class="field-input">González</div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Apellido materno</div>
+                <div class="field-input">López</div>
+              </div>
+            </div>
+            <div class="card-row">
+              <div class="field-row">
+                <div class="field-label">Fecha de nacimiento *</div>
+                <div class="field-input">15/03/1985</div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Sexo</div>
+                <div class="field-select">Femenino <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">País de procedencia</div>
+                <div class="field-input">Argentina</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Documento migratorio (RF-04)</div>
+            <div class="card-row">
+              <div class="field-row">
+                <div class="field-label">Tipo documento migratorio</div>
+                <div class="field-select">Tarjeta de turismo <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">N° formulario</div>
+                <div class="field-input">PDI-2026-00087654</div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Vigencia</div>
+                <div class="field-input">14/06/2026</div>
+              </div>
+            </div>
+            <div class="card-row">
+              <div class="field-row">
+                <div class="field-label">Motivo de viaje</div>
+                <div class="field-select">Turismo <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+              </div>
+              <div class="field-row" style="flex:2">
+                <div class="field-label">Dirección de destino declarada</div>
+                <div class="field-input">Av. Las Condes 1234, Santiago</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-primary" onclick="go('p-validacion')">
+              <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><path d="M9 11l3 3L22 4"/></svg>
+              Validar y continuar
+            </button>
+            <button class="btn-secondary">Guardar borrador</button>
+            <button class="btn-secondary" onclick="go('p-dashboard')">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ③ REGISTRO SALIDA (RF-02, RF-06) -->
+      <div class="page" id="p-salida">
+        <div class="page-header">
+          <div class="page-title">Registro de salida del país</div>
+          <div class="page-sub">RF-02 · RF-06 · Registro de salida de pasajeros y vehículos</div>
+        </div>
+        <div class="page-body">
+          <div class="card">
+            <div class="card-title">Búsqueda de registro previo</div>
+            <div class="card-row">
+              <div class="field-row" style="flex:2">
+                <div class="field-label">RUT o número de documento</div>
+                <div class="field-input">12.345.678-9</div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">N° folio ingreso (opcional)</div>
+                <div class="field-input placeholder">RF-2026-XXXXX</div>
+              </div>
+              <div class="field-row" style="justify-content:flex-end;padding-top:18px">
+                <button class="btn-primary">
+                  <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  Buscar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert alert-success">
+            <div class="alert-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <p><strong>Registro encontrado:</strong> María González López · Ingresó el 10/06/2026 por Paso Los Libertadores · Folio RF-2026-00501</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Datos del registro de salida</div>
+            <div class="card-row">
+              <div class="field-row"><div class="field-label">Pasajero</div><div class="field-input">María González López</div></div>
+              <div class="field-row"><div class="field-label">RUT</div><div class="field-input">12.345.678-9</div></div>
+              <div class="field-row"><div class="field-label">Destino declarado</div><div class="field-input">Mendoza, Argentina</div></div>
+            </div>
+            <div class="card-row">
+              <div class="field-row">
+                <div class="field-label">Fecha de salida</div>
+                <div class="field-input">14/06/2026</div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Hora de salida</div>
+                <div class="field-input">09:41</div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Oficial a cargo</div>
+                <div class="field-input">Ofic. P. Muñoz · PDI</div>
+              </div>
+            </div>
+            <div class="card-row">
+              <div class="field-row">
+                <div class="field-label">Observaciones</div>
+                <div class="field-input placeholder">Sin observaciones</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-success">
+              <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>
+              Confirmar salida
+            </button>
+            <button class="btn-secondary" onclick="go('p-dashboard')">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ④ VALIDACIÓN DE DOCUMENTOS (RF-03, RF-04, RF-19, RF-20) -->
+      <div class="page" id="p-validacion">
+        <div class="page-header">
+          <div class="page-title">Validación de documentos</div>
+          <div class="page-sub">RF-03 · RF-04 · RF-19 · Validación cruzada institucional y alertas</div>
+        </div>
+        <div class="page-body">
+          <div class="alert alert-error">
+            <div class="alert-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <p><strong>Alerta RF-20:</strong> Se detectó inconsistencia en la validación cruzada PDI–Aduanas para RUT 9.876.543-2 (Pedro Rojas). Los antecedentes no coinciden entre sistemas. Se requiere revisión manual.</p>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="card">
+              <div class="card-title">Pasajero en revisión</div>
+              <div style="padding:4px 0">
+                <div class="val-row">
+                  <div class="val-info"><div class="val-name">RUT</div><div class="val-sub">9.876.543-2</div></div>
+                </div>
+                <div class="val-row">
+                  <div class="val-info"><div class="val-name">Nombre</div><div class="val-sub">Pedro Rojas Fuentes</div></div>
+                </div>
+                <div class="val-row">
+                  <div class="val-info"><div class="val-name">Documento migratorio</div><div class="val-sub">Tarjeta de turismo PDI-2026-00087120</div></div>
+                </div>
+                <div class="val-row">
+                  <div class="val-info"><div class="val-name">Folio</div><div class="val-sub">RF-2026-00890</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">Estado de validación cruzada (RF-19)</div>
+              <div class="val-row">
+                <div class="val-dot ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="val-info"><div class="val-name">Identidad PDI</div><div class="val-sub">Documento de identidad válido</div></div>
+                <span class="badge badge-green">Válido</span>
+              </div>
+              <div class="val-row">
+                <div class="val-dot error"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                <div class="val-info"><div class="val-name">Aduanas Chile</div><div class="val-sub">Declaración jurada no encontrada en sistema Aduanas</div></div>
+                <span class="badge badge-red">Error</span>
+              </div>
+              <div class="val-row">
+                <div class="val-dot ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="val-info"><div class="val-name">SAG</div><div class="val-sub">Sin productos agropecuarios declarados</div></div>
+                <span class="badge badge-green">OK</span>
+              </div>
+              <div class="val-row">
+                <div class="val-dot warn"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div>
+                <div class="val-info"><div class="val-name">Antecedentes PDI</div><div class="val-sub">Registro de control migratorio pendiente de verificación</div></div>
+                <span class="badge badge-yellow">Pendiente</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Resolución manual</div>
+            <div class="card-row">
+              <div class="field-row" style="flex:2">
+                <div class="field-label">Observaciones del oficial</div>
+                <div class="field-input placeholder">Ingrese la resolución o comentarios de la revisión...</div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Resolución</div>
+                <div class="field-select">Seleccionar resolución <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn-success">
+                <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>
+                Aprobar con observación
+              </button>
+              <button class="btn-danger">
+                <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Rechazar ingreso
+              </button>
+              <button class="btn-secondary" onclick="go('p-antecedentes')">Consultar antecedentes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑤ CONSULTA ANTECEDENTES (RF-07, RF-08) -->
+      <div class="page" id="p-antecedentes">
+        <div class="page-header">
+          <div class="page-title">Consulta de antecedentes</div>
+          <div class="page-sub">RF-07 · RF-08 · Consulta de antecedentes de pasajeros y vehículos</div>
+        </div>
+        <div class="page-body">
+          <div class="card">
+            <div class="card-title">Parámetros de búsqueda</div>
+            <div class="card-row">
+              <div class="field-row">
+                <div class="field-label">Tipo de consulta</div>
+                <div class="field-select">Pasajero (RF-07) <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+              </div>
+              <div class="field-row" style="flex:2">
+                <div class="field-label">RUT / Pasaporte / N° patente</div>
+                <div class="field-input">9.876.543-2</div>
+              </div>
+              <div class="field-row" style="justify-content:flex-end;padding-top:18px">
+                <button class="btn-primary">
+                  <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  Consultar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="card">
+              <div class="card-title">Resultado PDI (RF-16)</div>
+              <div class="val-row">
+                <div class="val-dot ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="val-info"><div class="val-name">Sin órdenes de detención</div><div class="val-sub">Consultado a las 09:41</div></div>
+              </div>
+              <div class="val-row">
+                <div class="val-dot ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="val-info"><div class="val-name">Sin alertas migratorias</div><div class="val-sub">No figura en listas de seguimiento</div></div>
+              </div>
+              <div class="val-row">
+                <div class="val-dot warn"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div>
+                <div class="val-info"><div class="val-name">1 antecedente menor</div><div class="val-sub">Infracción de tránsito 2024 · No impide ingreso</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Historial de cruces (RF-09)</div>
+              <div class="val-row">
+                <div class="val-dot ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="val-info"><div class="val-name">Ingreso — 01/04/2026</div><div class="val-sub">Paso Los Libertadores · Aprobado</div></div>
+              </div>
+              <div class="val-row">
+                <div class="val-dot ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="val-info"><div class="val-name">Salida — 10/04/2026</div><div class="val-sub">Paso Los Libertadores · Normal</div></div>
+              </div>
+              <div class="val-row">
+                <div class="val-dot ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <div class="val-info"><div class="val-name">Ingreso — 14/06/2026</div><div class="val-sub">Paso Los Libertadores · En revisión</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑥ VEHÍCULOS (RF-05, RF-06, RF-08) -->
+      <div class="page" id="p-vehiculos">
+        <div class="page-header">
+          <div class="page-title">Registro y consulta de vehículos</div>
+          <div class="page-sub">RF-05 · RF-06 · RF-08 · Registro de ingreso/salida y antecedentes vehiculares</div>
+        </div>
+        <div class="page-body">
+          <div class="filter-bar">
+            <div class="chip-row">
+              <div class="chip on">Todos</div>
+              <div class="chip">Ingreso</div>
+              <div class="chip">Salida</div>
+              <div class="chip">Con alertas</div>
+            </div>
+            <input type="text" placeholder="Buscar por patente o propietario…" style="margin-left:auto">
+            <button class="btn-primary" onclick="go('p-ingreso')">
+              <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Registrar vehículo
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Patente</th><th>Tipo</th><th>Marca / Modelo</th><th>Propietario</th><th>Tipo registro</th><th>Hora</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>ABCD 12</strong></td><td>Automóvil</td><td>Toyota Hilux</td><td>María González</td><td><span class="badge badge-blue">Ingreso</span></td><td>08:15</td><td><span class="badge badge-green">Aprobado</span></td><td><div class="td-action"><button class="btn-secondary btn-sm">Ver</button><button class="btn-secondary btn-sm">Antec.</button></div></td></tr>
+                  <tr><td><strong>WXYZ 98</strong></td><td>Camioneta</td><td>Ford Ranger</td><td>Juan Pérez</td><td><span class="badge badge-gray">Salida</span></td><td>09:02</td><td><span class="badge badge-green">Aprobado</span></td><td><div class="td-action"><button class="btn-secondary btn-sm">Ver</button></div></td></tr>
+                  <tr><td><strong>ARG-MZA-4521</strong></td><td>Automóvil</td><td>Renault Duster</td><td>Carlos Ibáñez</td><td><span class="badge badge-blue">Ingreso</span></td><td>09:31</td><td><span class="badge badge-red">Con alerta</span></td><td><div class="td-action"><button class="btn-danger btn-sm">Revisar</button></div></td></tr>
+                  <tr><td><strong>PQRS 55</strong></td><td>Bus</td><td>Mercedes-Benz Sprinter</td><td>Trans. Andino Ltda.</td><td><span class="badge badge-blue">Ingreso</span></td><td>09:38</td><td><span class="badge badge-green">Aprobado</span></td><td><div class="td-action"><button class="btn-secondary btn-sm">Ver</button></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑦ HISTORIAL Y REPORTES (RF-09, RF-10, RF-11) -->
+      <div class="page" id="p-historial">
+        <div class="page-header">
+          <div class="page-title">Historial y Reportes</div>
+          <div class="page-sub">RF-09 · RF-10 · RF-11 · Consulta de registros y generación de reportes estadísticos</div>
+        </div>
+        <div class="page-body">
+          <div class="card">
+            <div class="card-title">Filtros de consulta (RF-09)</div>
+            <div class="card-row">
+              <div class="field-row">
+                <div class="field-label">Fecha desde</div>
+                <div class="field-input">01/06/2026</div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Fecha hasta</div>
+                <div class="field-input">14/06/2026</div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Tipo de evento</div>
+                <div class="field-select">Todos <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Estado</div>
+                <div class="field-select">Todos <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn-primary">Buscar registros</button>
+              <button class="btn-secondary">
+                <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--blue);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Exportar CSV
+              </button>
+              <button class="btn-secondary">Reporte diario (RF-10)</button>
+              <button class="btn-secondary">Reporte estadístico (RF-11)</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Resultados — 14 jun. 2026</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Folio</th><th>Pasajero / Vehículo</th><th>Documento</th><th>Tipo</th><th>Fecha / Hora</th><th>Oficial</th><th>Estado</th></tr></thead>
+                <tbody>
+                  <tr><td>#RF-2026-00892</td><td>Carlos Vidal</td><td>RUT 15.234.567-8</td><td><span class="badge badge-blue">Ingreso</span></td><td>14/06 09:38</td><td>Ofic. P. Muñoz</td><td><span class="badge badge-green">Aprobado</span></td></tr>
+                  <tr><td>#RF-2026-00891</td><td>Ana Torres</td><td>Pasaporte ARG 123456</td><td><span class="badge badge-gray">Salida</span></td><td>14/06 09:35</td><td>Ofic. R. Salas</td><td><span class="badge badge-green">Aprobado</span></td></tr>
+                  <tr><td>#RF-2026-00890</td><td>Pedro Rojas</td><td>RUT 9.876.543-2</td><td><span class="badge badge-blue">Ingreso</span></td><td>14/06 09:28</td><td>Ofic. P. Muñoz</td><td><span class="badge badge-red">Alerta</span></td></tr>
+                  <tr><td>#VH-2026-00301</td><td>ABCD 12 · Hilux</td><td>Prop. M. González</td><td><span class="badge badge-blue">Veh. ingreso</span></td><td>14/06 08:15</td><td>Ofic. R. Salas</td><td><span class="badge badge-green">Aprobado</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑧ INTEGRACIONES (RF-15, RF-16, RF-17) -->
+      <div class="page" id="p-integraciones">
+        <div class="page-header">
+          <div class="page-title">Integraciones institucionales</div>
+          <div class="page-sub">RF-15 · RF-16 · RF-17 · Estado de conexión con Aduanas, PDI y SAG</div>
+        </div>
+        <div class="page-body">
+          <div class="alert alert-info">
+            <div class="alert-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <p>Todas las integraciones utilizan canales cifrados TLS 1.3 (RNF-06). Las sincronizaciones quedan registradas en bitácora (RF-18). La validación cruzada se ejecuta automáticamente en cada registro (RF-19).</p>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="int-card">
+              <div class="int-icon" style="background:#dbeafe"><svg viewBox="0 0 24 24" style="stroke:var(--blue)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <div class="int-info">
+                <div class="int-name">Aduanas Chile (RF-15)</div>
+                <div class="int-desc">Sistema de declaraciones aduaneras · Última sincronización: 09:39 · Respuesta promedio: 0.4 s</div>
+              </div>
+              <div class="int-status" style="color:var(--green)">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>
+                Conectado
+              </div>
+              <button class="btn-secondary btn-sm" style="margin-left:12px">Probar conexión</button>
+            </div>
+
+            <div class="int-card">
+              <div class="int-icon" style="background:#f0fdf4"><svg viewBox="0 0 24 24" style="stroke:var(--green)"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg></div>
+              <div class="int-info">
+                <div class="int-name">PDI — Policía de Investigaciones (RF-16)</div>
+                <div class="int-desc">Antecedentes penales, órdenes de detención, control migratorio · Última sync: 09:40 · Respuesta: 0.6 s</div>
+              </div>
+              <div class="int-status" style="color:var(--green)">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>
+                Conectado
+              </div>
+              <button class="btn-secondary btn-sm" style="margin-left:12px">Probar conexión</button>
+            </div>
+
+            <div class="int-card">
+              <div class="int-icon" style="background:#fef9c3"><svg viewBox="0 0 24 24" style="stroke:#854d0e"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/><path d="M12 6v6l4 2"/></svg></div>
+              <div class="int-info">
+                <div class="int-name">SAG — Servicio Agrícola y Ganadero (RF-17)</div>
+                <div class="int-desc">Declaración de productos agropecuarios · Última sync: 09:30 · Respuesta promedio: 1.8 s — Latencia alta</div>
+              </div>
+              <div class="int-status" style="color:var(--yellow)">
+                <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b"></div>
+                Latencia alta
+              </div>
+              <button class="btn-secondary btn-sm" style="margin-left:12px">Probar conexión</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <div class="card-title">Configuración de sincronización</div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:14px;font-weight:600;color:var(--text)">Validación cruzada automática (RF-19)</div><div style="font-size:12px;color:var(--text-muted)">Ejecutar validación entre instituciones en cada registro</div></div>
+                <button class="toggle on"></button>
+              </div>
+              <div class="divider"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:14px;font-weight:600;color:var(--text)">Alertas automáticas (RF-20)</div><div style="font-size:12px;color:var(--text-muted)">Notificar al oficial cuando se detecten inconsistencias</div></div>
+                <button class="toggle on"></button>
+              </div>
+              <div class="divider"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:14px;font-weight:600;color:var(--text)">Modo offline (RNF-10)</div><div style="font-size:12px;color:var(--text-muted)">Registrar localmente si hay fallo de conexión y sincronizar al restablecerse</div></div>
+                <button class="toggle"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑨ USUARIOS Y ROLES (RF-12, RF-13, RF-14) -->
+      <div class="page" id="p-usuarios">
+        <div class="page-header">
+          <div class="page-title">Usuarios y roles</div>
+          <div class="page-sub">RF-12 · RF-13 · RF-14 · Administración de usuarios, roles y autenticación</div>
+        </div>
+        <div class="page-body">
+          <div class="filter-bar">
+            <input type="text" placeholder="Buscar usuario por nombre o RUT…">
+            <div class="chip-row">
+              <div class="chip on">Todos</div>
+              <div class="chip">Administrador</div>
+              <div class="chip">Operador</div>
+              <div class="chip">Supervisor</div>
+            </div>
+            <button class="btn-primary" style="margin-left:auto">
+              <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nuevo usuario
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Usuario</th><th>RUT</th><th>Institución</th><th>Rol (RF-13)</th><th>Último acceso</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>P. Muñoz</strong></td><td>13.456.789-0</td><td>PDI</td><td><span class="role-badge role-op">Operador</span></td><td>Hoy 09:41</td><td><span class="badge badge-green">Activo</span></td><td><div class="td-action"><button class="btn-secondary btn-sm">Editar</button><button class="btn-secondary btn-sm">Permisos</button></div></td></tr>
+                  <tr><td><strong>R. Salas</strong></td><td>16.789.012-3</td><td>Aduanas</td><td><span class="role-badge role-op">Operador</span></td><td>Hoy 08:00</td><td><span class="badge badge-green">Activo</span></td><td><div class="td-action"><button class="btn-secondary btn-sm">Editar</button><button class="btn-secondary btn-sm">Permisos</button></div></td></tr>
+                  <tr><td><strong>M. Cifuentes</strong></td><td>11.234.567-8</td><td>PDI</td><td><span class="role-badge role-admin">Administrador</span></td><td>13/06 17:22</td><td><span class="badge badge-green">Activo</span></td><td><div class="td-action"><button class="btn-secondary btn-sm">Editar</button><button class="btn-secondary btn-sm">Permisos</button></div></td></tr>
+                  <tr><td><strong>L. Vega</strong></td><td>19.012.345-6</td><td>SAG</td><td><span class="role-badge role-viewer">Supervisor</span></td><td>12/06 11:05</td><td><span class="badge badge-gray">Inactivo</span></td><td><div class="td-action"><button class="btn-secondary btn-sm">Editar</button><button class="btn-secondary btn-sm">Activar</button></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Configuración de autenticación (RF-14, RNF-04, RNF-05)</div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:14px;font-weight:600;color:var(--text)">Doble factor de autenticación (2FA)</div><div style="font-size:12px;color:var(--text-muted)">Obligatorio para roles Administrador y Supervisor</div></div>
+                <button class="toggle on"></button>
+              </div>
+              <div class="divider"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:14px;font-weight:600;color:var(--text)">Caducidad de contraseña cada 90 días</div><div style="font-size:12px;color:var(--text-muted)">Forzar cambio de contraseña periódico (RNF-04)</div></div>
+                <button class="toggle on"></button>
+              </div>
+              <div class="divider"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div><div style="font-size:14px;font-weight:600;color:var(--text)">Bloqueo tras 5 intentos fallidos</div><div style="font-size:12px;color:var(--text-muted)">Bloquear cuenta y notificar al administrador</div></div>
+                <button class="toggle on"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑩ BITÁCORA DE ACTIVIDAD (RF-18, RNF-07) -->
+      <div class="page" id="p-logs">
+        <div class="page-header">
+          <div class="page-title">Bitácora de actividad</div>
+          <div class="page-sub">RF-18 · RNF-07 · Registro completo de acciones del sistema y usuarios</div>
+        </div>
+        <div class="page-body">
+          <div class="filter-bar">
+            <input type="text" placeholder="Filtrar por usuario, acción o IP…">
+            <div class="chip-row">
+              <div class="chip on">Todas</div>
+              <div class="chip">Autenticación</div>
+              <div class="chip">Registro</div>
+              <div class="chip">Validación</div>
+              <div class="chip">Alertas</div>
+              <div class="chip">Admin</div>
+            </div>
+            <button class="btn-secondary" style="margin-left:auto">
+              <svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:var(--blue);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar log
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Eventos recientes — 14 jun. 2026</div>
+            <div class="log-row">
+              <div class="log-time">09:41</div>
+              <div class="log-dot" style="background:var(--blue)"></div>
+              <div class="log-text"><strong>CONSULTA_ANTECEDENTES</strong> · Pedro Rojas · RUT 9.876.543-2 · Módulo validación <span class="log-user">· P. Muñoz · IP 10.0.1.42</span></div>
+            </div>
+            <div class="log-row">
+              <div class="log-time">09:40</div>
+              <div class="log-dot" style="background:var(--red)"></div>
+              <div class="log-text"><strong>ALERTA_GENERADA</strong> · Inconsistencia PDI–Aduanas · Folio RF-2026-00890 <span class="log-user">· Sistema · Auto</span></div>
+            </div>
+            <div class="log-row">
+              <div class="log-time">09:38</div>
+              <div class="log-dot" style="background:var(--green)"></div>
+              <div class="log-text"><strong>REGISTRO_INGRESO</strong> · Carlos Vidal · RUT 15.234.567-8 · Folio RF-2026-00892 · Aprobado <span class="log-user">· P. Muñoz · IP 10.0.1.42</span></div>
+            </div>
+            <div class="log-row">
+              <div class="log-time">09:35</div>
+              <div class="log-dot" style="background:var(--green)"></div>
+              <div class="log-text"><strong>REGISTRO_SALIDA</strong> · Ana Torres · Pasaporte ARG 123456 · Folio RF-2026-00891 · Aprobado <span class="log-user">· R. Salas · IP 10.0.1.43</span></div>
+            </div>
+            <div class="log-row">
+              <div class="log-time">09:28</div>
+              <div class="log-dot" style="background:#854d0e"></div>
+              <div class="log-text"><strong>VALIDACION_CRUZADA</strong> · Pedro Rojas · Error Aduanas: declaración no encontrada <span class="log-user">· Sistema · Auto</span></div>
+            </div>
+            <div class="log-row">
+              <div class="log-time">09:02</div>
+              <div class="log-dot" style="background:var(--green)"></div>
+              <div class="log-text"><strong>REGISTRO_VEHICULO</strong> · Patente WXYZ 98 · Ford Ranger · Salida · Aprobado <span class="log-user">· R. Salas · IP 10.0.1.43</span></div>
+            </div>
+            <div class="log-row">
+              <div class="log-time">08:15</div>
+              <div class="log-dot" style="background:var(--blue)"></div>
+              <div class="log-text"><strong>REGISTRO_VEHICULO</strong> · Patente ABCD 12 · Toyota Hilux · Ingreso · Aprobado <span class="log-user">· R. Salas · IP 10.0.1.43</span></div>
+            </div>
+            <div class="log-row">
+              <div class="log-time">06:01</div>
+              <div class="log-dot" style="background:var(--blue)"></div>
+              <div class="log-text"><strong>AUTENTICACION</strong> · Usuario P. Muñoz · Inicio de sesión exitoso · Turno A <span class="log-user">· P. Muñoz · IP 10.0.1.42</span></div>
+            </div>
+            <div class="log-row">
+              <div class="log-time">06:00</div>
+              <div class="log-dot" style="background:var(--blue)"></div>
+              <div class="log-text"><strong>AUTENTICACION</strong> · Usuario R. Salas · Inicio de sesión exitoso · Turno A <span class="log-user">· R. Salas · IP 10.0.1.43</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+function go(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const map = {
+    'p-dashboard': 0,'p-ingreso': 1,'p-salida': 2,'p-validacion': 3,
+    'p-antecedentes': 4,'p-vehiculos': 5,'p-historial': 6,
+    'p-integraciones': 7,'p-usuarios': 8,'p-logs': 9
+  };
+  const items = document.querySelectorAll('.nav-item');
+  if (map[id] !== undefined) items[map[id]].classList.add('active');
+}
+
+// Chip toggle
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', function() {
+    const row = this.closest('.chip-row');
+    if (!row) return;
+    row.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+    this.classList.add('on');
+  });
+});
+
+// Toggle switch
+document.querySelectorAll('.toggle').forEach(t => {
+  t.addEventListener('click', function() {
+    this.classList.toggle('on');
+  });
+});
+</script>
+</body>
+</html>

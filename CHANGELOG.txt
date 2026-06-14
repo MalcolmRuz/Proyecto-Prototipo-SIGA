@@ -1,0 +1,61 @@
+# CHANGELOG — SIGA Sistema de Gestión Fronteriza
+
+## [v1.0] — 14/06/2026
+### Mejoras
+- Revisión general de compatibilidad cross-browser (RNF-16, RNF-17)
+- Ajuste de estilos CSS responsivos
+- Verificación de cumplimiento IEEE 830 (RNF-19)
+
+## [v0.13] — 13/06/2026
+### Mejoras
+- Indicador de latencia en módulo Integraciones (RNF-03)
+- Badge "Lento" cuando SAG supera 1.5 segundos de respuesta
+
+## [v0.12] — 13/06/2026
+### Correcciones
+- Fix visualización de alertas en validación cruzada (RF-19, RF-20)
+- Badge de estado por institución: PDI, Aduanas, SAG
+
+## [v0.11] — 12/06/2026
+### Mejoras
+- Dashboard: tarjetas de estadísticas, gráfico de tránsito por hora, tabla de últimos registros (RF-10)
+
+## [v0.10] — 11/06/2026
+### Nuevo
+- Módulo Bitácora de Actividad completo (RF-18, RNF-07)
+
+## [v0.9] — 10/06/2026
+### Nuevo
+- Módulo Usuarios y Roles con badges de rol y configuración de seguridad (RF-12, RF-13, RNF-04, RNF-05)
+
+## [v0.8] — 09/06/2026
+### Nuevo
+- Módulo Integraciones con estado de conexión PDI, Aduanas y SAG (RF-15, RF-16, RF-17)
+
+## [v0.7] — 08/06/2026
+### Nuevo
+- Módulo Historial y Reportes con filtros y exportación (RF-09, RF-10)
+
+## [v0.6] — 07/06/2026
+### Nuevo
+- Módulo Vehículos: registro de ingreso y salida (RF-05, RF-06, RF-08)
+
+## [v0.5] — 06/06/2026
+### Nuevo
+- Módulo Consulta de Antecedentes de pasajeros y vehículos (RF-07, RF-08)
+
+## [v0.4] — 05/06/2026
+### Nuevo
+- Módulo Validación de Documentos con validación cruzada y alertas (RF-03, RF-04, RF-19, RF-20)
+
+## [v0.3] — 04/06/2026
+### Nuevo
+- Módulo Registro de Salida con búsqueda por RUT y confirmación (RF-02, RF-06)
+
+## [v0.2] — 03/06/2026
+### Nuevo
+- Módulo Registro de Ingreso con formulario paso a paso (RF-01, RF-03, RF-04)
+
+## [v0.1] — 01/06/2026
+### Inicial
+- Creación base del prototipo SIGA: estructura HTML, sidebar, topbar y estilos CSS
