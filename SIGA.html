@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGA · Sistema Integrado de Gestión Aduanera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-900:#0A1F35; --navy-800:#102B47; --navy-700:#163E61; --navy-600:#1B4C77;
+  --blue-500:#2E76B6; --blue-400:#4A91D1; --blue-100:#E6F0F9;
+  --amber-500:#D99B1F; --amber-100:#FBF0DA;
+  --red-600:#C0392B; --red-100:#FBE6E3;
+  --green-600:#2F8F5B; --green-100:#E3F4EA;
+  --bg:#EFF3F7; --surface:#FFFFFF; --border:#DCE3EA;
+  --text:#19232E; --text-muted:#5C6B7A; --text-faint:#8A96A3;
+  --radius:10px; --radius-sm:6px;
+  --shadow: 0 1px 2px rgba(10,31,53,.06), 0 4px 14px rgba(10,31,53,.07);
+  --font-ui:'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono','Courier New',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font-ui); color:var(--text); background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit; cursor:pointer;}
+input,select{font-family:inherit;}
+h1,h2,h3,h4{margin:0; font-family:var(--font-ui); letter-spacing:-0.01em;}
+.hidden{display:none !important;}
+
+/* ===== LOGIN ===== */
+.login-screen{
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(1200px 600px at 20% -10%, #1B4C77 0%, var(--navy-800) 45%, var(--navy-900) 100%);
+  padding:24px;
+}
+.login-card{
+  width:100%; max-width:420px; background:var(--surface); border-radius:14px;
+  padding:36px 32px 28px; box-shadow:0 30px 60px rgba(0,0,0,.35);
+}
+.login-mark{display:flex; align-items:center; gap:10px; margin-bottom:22px;}
+.login-mark .bar{width:6px; height:30px; background:var(--amber-500); border-radius:3px;}
+.login-mark .word{font-weight:800; font-size:26px; color:var(--navy-900); letter-spacing:-0.02em;}
+.login-mark .sub{font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em; margin-top:2px;}
+.login-card h1{font-size:19px; color:var(--navy-900); margin-bottom:4px;}
+.login-card p.lead{color:var(--text-muted); font-size:13.5px; margin:0 0 22px;}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:12.5px; font-weight:600; color:var(--text); margin-bottom:5px;}
+.field input,.field select{
+  width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm);
+  font-size:14px; background:#FBFCFD; transition:border-color .15s, box-shadow .15s;
+}
+.field input:focus,.field select:focus{outline:none; border-color:var(--blue-500); box-shadow:0 0 0 3px var(--blue-100);}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  padding:10px 16px; border-radius:var(--radius-sm); border:1px solid transparent;
+  font-size:13.5px; font-weight:600; transition:filter .12s, background .12s;
+}
+.btn-primary{background:var(--navy-700); color:#fff; width:100%; padding:11px;}
+.btn-primary:hover{background:var(--navy-600);}
+.btn-amber{background:var(--amber-500); color:#241a00;}
+.btn-amber:hover{filter:brightness(1.05);}
+.btn-ghost{background:transparent; border-color:var(--border); color:var(--text);}
+.btn-ghost:hover{background:#F3F6F9;}
+.btn-danger{background:var(--red-100); color:var(--red-600); border-color:transparent;}
+.btn-danger:hover{filter:brightness(.97);}
+.btn-sm{padding:6px 10px; font-size:12.5px;}
+.login-error{
+  background:var(--red-100); color:var(--red-600); border-radius:var(--radius-sm);
+  padding:9px 12px; font-size:13px; margin-top:12px;
+}
+.login-help{
+  margin-top:22px; padding-top:16px; border-top:1px dashed var(--border);
+  font-size:12px; color:var(--text-muted);
+}
+.login-help strong{display:block; color:var(--text); font-size:12.5px; margin-bottom:6px;}
+.login-help ul{margin:0; padding-left:0; list-style:none;}
+.login-help li{margin-bottom:3px;}
+.login-help code{background:#F3F6F9; padding:1px 6px; border-radius:4px; font-family:var(--font-mono); font-size:11.5px;}
+
+/* ===== APP SHELL ===== */
+.app{display:flex; min-height:100vh;}
+.sidebar{
+  width:230px; flex-shrink:0; background:var(--navy-900); color:#fff;
+  display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:40;
+  transition:transform .2s ease;
+}
+.sidebar-brand{padding:22px 20px 16px; display:flex; align-items:center; gap:9px;}
+.sidebar-brand .bar{width:5px; height:24px; background:var(--amber-500); border-radius:3px;}
+.sidebar-brand .word{font-weight:800; font-size:20px; letter-spacing:-0.02em;}
+.sidebar-brand .sub{display:block; font-size:9.5px; color:#9DB3C7; text-transform:uppercase; letter-spacing:.09em; margin-top:1px;}
+.nav{display:flex; flex-direction:column; padding:8px 12px; gap:2px; flex:1; overflow-y:auto;}
+.nav-item{
+  text-align:left; background:transparent; border:none; color:#C3D2E0;
+  padding:10px 12px; border-radius:8px; font-size:13.5px; font-weight:500;
+  display:flex; align-items:center; gap:10px;
+}
+.nav-item .dot{width:6px; height:6px; border-radius:50%; background:#3E5A77; flex-shrink:0;}
+.nav-item:hover{background:#11314F; color:#fff;}
+.nav-item.active{background:var(--blue-500); color:#fff;}
+.nav-item.active .dot{background:var(--amber-500);}
+.sidebar-footer{padding:14px 20px; font-size:10.5px; color:#5E7990; border-top:1px solid #16314C;}
+.main{flex:1; margin-left:230px; display:flex; flex-direction:column; min-height:100vh;}
+.topbar{
+  background:var(--surface); border-bottom:1px solid var(--border); padding:14px 26px;
+  display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:20;
+}
+.icon-btn{
+  width:34px; height:34px; border-radius:8px; border:1px solid var(--border); background:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--text-muted);
+}
+.icon-btn:hover{background:#F3F6F9;}
+#menuToggle{display:none;}
+.topbar h2{font-size:17px; color:var(--navy-900); flex:1;}
+.topbar-right{display:flex; align-items:center; gap:10px;}
+.user-chip{display:flex; flex-direction:column; align-items:flex-end; line-height:1.25; margin-right:4px;}
+.user-chip #userName{font-size:13px; font-weight:600; color:var(--text);}
+.role-badge{
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+  padding:1px 7px; border-radius:20px; background:var(--blue-100); color:var(--blue-500); margin-top:2px;
+}
+.content{padding:22px 26px 60px; max-width:1280px; width:100%; margin:0 auto;}
+.view{display:flex; flex-direction:column; gap:18px;}
+
+/* ===== ALERTS ===== */
+.alert-zone{padding:0 26px; display:flex; flex-direction:column; gap:8px; max-width:1280px; margin:14px auto 0; width:100%;}
+.alert{
+  padding:11px 14px; border-radius:var(--radius-sm); font-size:13px; display:flex; gap:10px; align-items:flex-start;
+  border:1px solid transparent; animation:slidein .18s ease;
+}
+@keyframes slidein{from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:translateY(0);}}
+.alert b{font-weight:700;}
+.alert .close{margin-left:auto; background:none; border:none; cursor:pointer; opacity:.55; font-size:14px;}
+.alert.error{background:var(--red-100); color:#8C2A1F; border-color:#F2C6BF;}
+.alert.warning{background:var(--amber-100); color:#7A5400; border-color:#EFD89E;}
+.alert.success{background:var(--green-100); color:#1F6B41; border-color:#BFE6CE;}
+.alert.info{background:var(--blue-100); color:#1E5685; border-color:#C4DCEF;}
+
+/* ===== CARDS / GRID ===== */
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px 20px;}
+.card h3{font-size:14px; color:var(--navy-900); margin-bottom:4px;}
+.card .card-sub{font-size:12px; color:var(--text-muted); margin-bottom:14px;}
+.kpi-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+.kpi-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow);}
+.kpi-card .label{font-size:11.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; font-weight:600;}
+.kpi-card .value{font-size:28px; font-weight:800; color:var(--navy-900); margin-top:6px; font-family:var(--font-mono);}
+.kpi-card .delta{font-size:11.5px; margin-top:4px; color:var(--text-faint);}
+.kpi-card.alert-card .value{color:var(--red-600);}
+.kpi-card.pending-card .value{color:var(--amber-500);}
+.two-col{display:grid; grid-template-columns:2fr 1fr; gap:16px; align-items:start;}
+@media (max-width:980px){.two-col{grid-template-columns:1fr;} .kpi-grid{grid-template-columns:repeat(2,1fr);}}
+
+/* ===== FLOW DIAGRAM (signature) ===== */
+.flow{display:flex; align-items:stretch; gap:0; overflow-x:auto; padding:6px 0 2px;}
+.flow-stage{
+  flex:1; min-width:140px; background:#F8FAFC; border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:12px 14px; position:relative; margin-right:22px;
+}
+.flow-stage:last-child{margin-right:0;}
+.flow-stage::after{
+  content:'›'; position:absolute; right:-19px; top:50%; transform:translateY(-50%);
+  font-size:22px; color:var(--text-faint); font-weight:700;
+}
+.flow-stage:last-child::after{display:none;}
+.flow-stage .fs-label{font-size:11px; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
+.flow-stage .fs-value{font-size:22px; font-weight:800; color:var(--navy-900); font-family:var(--font-mono); margin-top:4px;}
+.flow-stage .fs-note{font-size:11px; color:var(--text-faint); margin-top:3px;}
+.flow-stage.warn{border-color:#EFD89E; background:var(--amber-100);}
+.flow-stage.warn .fs-value{color:#7A5400;}
+.flow-stage.ok{border-color:#BFE6CE; background:var(--green-100);}
+.flow-stage.ok .fs-value{color:#1F6B41;}
+
+/* ===== CHART ===== */
+.chart-wrap{display:flex; align-items:flex-end; gap:14px; height:160px; padding:8px 4px 0;}
+.chart-day{display:flex; flex-direction:column; align-items:center; gap:6px; flex:1;}
+.chart-bars{display:flex; align-items:flex-end; gap:3px; height:128px;}
+.chart-bar{width:13px; border-radius:3px 3px 0 0; transition:height .3s ease;}
+.chart-bar.entrada{background:var(--blue-500);}
+.chart-bar.salida{background:var(--amber-500);}
+.chart-day .lbl{font-size:11px; color:var(--text-muted); font-weight:600;}
+.legend{display:flex; gap:16px; font-size:12px; color:var(--text-muted); margin-top:10px;}
+.legend span{display:inline-flex; align-items:center; gap:6px;}
+.legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+
+/* ===== INTEGRATIONS ===== */
+.integ-row{display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;}
+.integ-row:last-child{border-bottom:none;}
+.integ-name{font-weight:600;}
+.integ-status{display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--green-600); font-weight:600;}
+.integ-status .dot{width:7px; height:7px; border-radius:50%; background:var(--green-600);}
+.integ-sync{font-size:10.5px; color:var(--text-faint); display:block; margin-top:1px;}
+
+/* ===== PENDING LIST ===== */
+.pending-item{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:12.5px;}
+.pending-item:last-child{border-bottom:none;}
+.pending-item .pi-name{font-weight:600;}
+.pending-item .pi-meta{color:var(--text-muted); font-size:11px;}
+.empty-note{color:var(--text-faint); font-size:12.5px; padding:8px 0;}
+
+/* ===== FORMS ===== */
+.form-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px 22px;}
+.form-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+@media (max-width:900px){.form-grid{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:600px){.form-grid{grid-template-columns:1fr;}}
+.form-grid .field.span2{grid-column:span 2;}
+.form-grid .field.span3{grid-column:1/-1;}
+.hint{font-size:11px; color:var(--blue-500); margin-top:4px;}
+.checkrow{display:flex; align-items:center; gap:8px; font-size:13px; padding-top:22px;}
+.checkrow input{width:auto;}
+fieldset.minor-box{
+  grid-column:1/-1; border:1px solid #EFD89E; background:var(--amber-100); border-radius:var(--radius-sm);
+  padding:14px 16px; margin:0; display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+}
+fieldset.minor-box legend{font-size:12px; font-weight:700; color:#7A5400; padding:0 4px;}
+.form-actions{grid-column:1/-1; display:flex; gap:10px; justify-content:flex-end; padding-top:4px;}
+
+/* ===== TABLES ===== */
+.table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:#fff;}
+table{width:100%; border-collapse:collapse; font-size:13px;}
+thead th{
+  background:#F7F9FB; text-align:left; padding:10px 14px; font-size:11.5px; color:var(--text-muted);
+  text-transform:uppercase; letter-spacing:.03em; font-weight:700; border-bottom:1px solid var(--border); white-space:nowrap;
+}
+tbody td{padding:10px 14px; border-bottom:1px solid #EEF1F5; vertical-align:middle; white-space:nowrap;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#FAFBFD;}
+.mono{font-family:var(--font-mono); font-size:12.5px;}
+.badge{display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700;}
+.badge.ok{background:var(--green-100); color:var(--green-600);}
+.badge.alerta{background:var(--red-100); color:var(--red-600);}
+.badge.pendiente{background:var(--amber-100); color:#7A5400;}
+.badge.entrada{background:var(--blue-100); color:var(--blue-500);}
+.badge.salida{background:#F2EAF7; color:#7B3FA0;}
+.table-empty{padding:26px; text-align:center; color:var(--text-faint); font-size:13px;}
+.section-head{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+.section-head h3{font-size:15px; color:var(--navy-900);}
+
+/* ===== SEARCH ===== */
+.search-bar{display:flex; gap:10px;}
+.search-bar input{flex:1; padding:11px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px;}
+.search-bar input:focus{outline:none; border-color:var(--blue-500); box-shadow:0 0 0 3px var(--blue-100);}
+
+/* ===== MODAL ===== */
+.modal{position:fixed; inset:0; background:rgba(10,20,32,.55); display:flex; align-items:center; justify-content:center; z-index:100; padding:20px;}
+.modal-card{background:#fff; border-radius:12px; max-width:480px; width:100%; padding:24px 26px; box-shadow:0 30px 60px rgba(0,0,0,.3); position:relative; max-height:80vh; overflow-y:auto;}
+.modal-close{position:absolute; top:14px; right:14px; background:none; border:none; font-size:20px; color:var(--text-muted); cursor:pointer;}
+.modal-card h3{font-size:16px; color:var(--navy-900); margin-bottom:12px;}
+.modal-card p{font-size:13.5px; color:var(--text); line-height:1.55; margin:0 0 10px;}
+.modal-card ul{margin:0 0 10px; padding-left:18px; font-size:13px; color:var(--text); line-height:1.6;}
+
+/* ===== RESPONSIVE SIDEBAR ===== */
+@media (max-width:860px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  #menuToggle{display:flex;}
+}
+
+/* ===== PRINT ===== */
+@media print{
+  .sidebar, .topbar, .alert-zone, #helpModal, .form-card, .no-print{display:none !important;}
+  .main{margin-left:0;}
+  body{background:#fff;}
+  .content{padding:0; max-width:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-mark">
+      <span class="bar"></span>
+      <div>
+        <span class="word">SIGA</span>
+        <span class="sub">Aduanas · Chile</span>
+      </div>
+    </div>
+    <h1>Iniciar sesión</h1>
+    <p class="lead">Sistema Integrado de Gestión Aduanera — pasos fronterizos terrestres.</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginUser">Usuario</label>
+        <input id="loginUser" type="text" autocomplete="username" placeholder="ej: admin" required>
+      </div>
+      <div class="field">
+        <label for="loginPass">Contraseña</label>
+        <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Ingresar al sistema</button>
+      <p id="loginError" class="login-error hidden"></p>
+    </form>
+    <div class="login-help">
+      <strong>Usuarios de prueba</strong>
+      <ul>
+        <li><code>admin</code> / <code>admin123</code> — Administrador</li>
+        <li><code>jfunc</code> / <code>aduana123</code> — Funcionario Aduana</li>
+        <li><code>sagop</code> / <code>sag123</code> — Funcionario SAG / PDI</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="app hidden">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="bar"></span>
+      <div>
+        <span class="word">SIGA</span>
+        <span class="sub">Aduanas · Chile</span>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-footer">SIGA v1.0 · Prototipo funcional</div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button id="menuToggle" class="icon-btn" aria-label="Abrir menú">☰</button>
+      <h2 id="viewTitle">Panel General</h2>
+      <div class="topbar-right">
+        <button id="helpBtn" class="icon-btn" title="Ayuda de esta sección">?</button>
+        <div class="user-chip">
+          <span id="userName">—</span>
+          <span id="userRole" class="role-badge">—</span>
+        </div>
+        <button id="logoutBtn" class="btn btn-ghost btn-sm">Salir</button>
+      </div>
+    </header>
+
+    <div id="alertZone" class="alert-zone"></div>
+
+    <main class="content">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section data-view="dashboard" class="view">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="label">Pasajeros hoy</div>
+            <div class="value" id="kpiPasajeros">0</div>
+            <div class="delta" id="kpiPasajerosDelta">0 entradas · 0 salidas</div>
+          </div>
+          <div class="kpi-card">
+            <div class="label">Vehículos hoy</div>
+            <div class="value" id="kpiVehiculos">0</div>
+            <div class="delta" id="kpiVehiculosDelta">0 entradas · 0 salidas</div>
+          </div>
+          <div class="kpi-card alert-card">
+            <div class="label">Alertas activas</div>
+            <div class="value" id="kpiAlertas">0</div>
+            <div class="delta">Validación cruzada PDI / lista de control</div>
+          </div>
+          <div class="kpi-card pending-card">
+            <div class="label">Pendientes SAG / PDI</div>
+            <div class="value" id="kpiPendientes">0</div>
+            <div class="delta">Declaraciones por revisar</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Flujo del paso fronterizo — hoy</h3>
+          <div class="card-sub">Trazabilidad del despacho aduanero, desde el arribo hasta el cruce completado.</div>
+          <div class="flow" id="flowDiagram"></div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <h3>Tránsito de los últimos 7 días</h3>
+            <div class="card-sub">Entradas y salidas registradas por jornada, todos los pasos fronterizos.</div>
+            <div class="chart-wrap" id="weeklyChart"></div>
+            <div class="legend">
+              <span><i style="background:var(--blue-500)"></i> Entradas</span>
+              <span><i style="background:var(--amber-500)"></i> Salidas</span>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div class="card">
+              <h3>Integración con otros servicios</h3>
+              <div class="card-sub">Estado de sincronización con sistemas externos.</div>
+              <div id="integPanel"></div>
+            </div>
+            <div class="card">
+              <h3>Pendientes de revisión SAG / PDI</h3>
+              <div class="card-sub">Declaraciones de alimentos, mascotas o alertas por inspeccionar.</div>
+              <div id="pendingPanel"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== REGISTRAR PASAJERO ===== -->
+      <section data-view="pasajero" class="view hidden">
+        <form id="pjForm" class="form-card">
+          <div class="section-head" style="margin-bottom:14px;">
+            <h3>Registro de pasajero</h3>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Movimiento</label>
+              <select id="pjMovimiento" required>
+                <option value="Entrada">Entrada a Chile</option>
+                <option value="Salida">Salida de Chile</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Paso fronterizo</label>
+              <select id="pjPaso" required></select>
+            </div>
+            <div class="field">
+              <label>Nacionalidad</label>
+              <select id="pjNacionalidad" required>
+                <option>Chilena</option>
+                <option>Argentina</option>
+                <option>Otra</option>
+              </select>
+            </div>
+            <div class="field span2">
+              <label>Nombre completo</label>
+              <input id="pjNombre" type="text" placeholder="Nombre y apellidos" required>
+            </div>
+            <div class="field">
+              <label>Fecha de nacimiento</label>
+              <input id="pjFechaNac" type="date" required>
+            </div>
+            <div class="field">
+              <label>Tipo de documento</label>
+              <select id="pjTipoDoc" required>
+                <option>Cédula de identidad</option>
+                <option>Pasaporte</option>
+              </select>
+            </div>
+            <div class="field span2">
+              <label>Número de documento</label>
+              <input id="pjNumDoc" type="text" placeholder="ej: 12.345.678-9" required>
+              <div class="hint">Para probar la validación cruzada, use el documento <strong>12.345.678-9</strong>.</div>
+            </div>
+
+            <fieldset class="minor-box hidden" id="pjMenorFieldset">
+              <legend>Pasajero menor de edad (<span id="pjEdadDisplay">0</span> años) — documentación migratoria</legend>
+              <div class="field">
+                <label>Viaja…</label>
+                <select id="pjAcompanante">
+                  <option value="ambos">Con ambos padres / representantes</option>
+                  <option value="uno">Con uno de los padres</option>
+                  <option value="solo">Solo, sin compañía de los padres</option>
+                </select>
+              </div>
+              <div class="field" style="grid-column:span 2; display:flex; align-items:flex-end; gap:18px;">
+                <label class="checkrow" style="padding-top:0;">
+                  <input type="checkbox" id="pjAutorizacionNotarial"> Cuenta con autorización notarial del padre/madre ausente
+                </label>
+              </div>
+            </fieldset>
+
+            <label class="checkrow"><input type="checkbox" id="pjAlimentos"> Declara alimentos / productos agrícolas</label>
+            <label class="checkrow"><input type="checkbox" id="pjMascota"> Declara ingreso de mascota</label>
+
+            <div class="form-actions">
+              <button type="reset" class="btn btn-ghost">Limpiar</button>
+              <button type="submit" class="btn btn-amber">Registrar pasajero</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="section-head">
+          <h3 style="color:var(--navy-900); font-size:14px;">Registros de hoy</h3>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Hora</th><th>Mov.</th><th>Nombre</th><th>Documento</th><th>Nacionalidad</th><th>Edad</th><th>Paso</th><th>Estado</th>
+            </tr></thead>
+            <tbody id="pjTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== REGISTRAR VEHÍCULO ===== -->
+      <section data-view="vehiculo" class="view hidden">
+        <form id="vhForm" class="form-card">
+          <div class="section-head" style="margin-bottom:14px;">
+            <h3>Registro de vehículo</h3>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Movimiento</label>
+              <select id="vhMovimiento" required>
+                <option value="Salida">Salida temporal de Chile</option>
+                <option value="Entrada">Admisión temporal a Chile</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Paso fronterizo</label>
+              <select id="vhPaso" required></select>
+            </div>
+            <div class="field">
+              <label>Patente / placa</label>
+              <input id="vhPatente" type="text" placeholder="ej: BBCC12" required style="text-transform:uppercase;">
+              <div class="hint">Para probar la alerta, use la patente <strong>BBCC12</strong>.</div>
+            </div>
+            <div class="field">
+              <label>Tipo de vehículo</label>
+              <select id="vhTipoVehiculo">
+                <option>Automóvil</option>
+                <option>Camioneta</option>
+                <option>Motocicleta</option>
+                <option>Camión</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tipo de trámite</label>
+              <select id="vhTramite">
+                <option value="turismo">Turístico (Acuerdo Chileno-Argentino)</option>
+                <option value="diplomatico">Diplomático (placa C.D. / CC / O.I. / P.A.T.)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Plazo otorgado</label>
+              <input id="vhPlazoDisplay" type="text" value="180 días corridos" readonly style="background:#F3F6F9; color:var(--text-muted);">
+            </div>
+            <div class="field span2">
+              <label>Nombre del conductor</label>
+              <input id="vhConductorNombre" type="text" placeholder="Nombre y apellidos" required>
+            </div>
+            <div class="field">
+              <label>Documento del conductor</label>
+              <input id="vhConductorDoc" type="text" placeholder="Cédula o pasaporte" required>
+            </div>
+
+            <div class="form-actions">
+              <button type="reset" class="btn btn-ghost">Limpiar</button>
+              <button type="submit" class="btn btn-amber">Registrar vehículo</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="section-head">
+          <h3 style="color:var(--navy-900); font-size:14px;">Registros de hoy</h3>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Hora</th><th>Mov.</th><th>Patente</th><th>Tipo</th><th>Conductor</th><th>Trámite</th><th>Plazo</th><th>Paso</th><th>Estado</th>
+            </tr></thead>
+            <tbody id="vhTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== CONSULTAS ===== -->
+      <section data-view="consultas" class="view hidden">
+        <div class="card">
+          <h3>Consulta de antecedentes</h3>
+          <div class="card-sub">Busque por nombre, documento o patente en pasajeros, vehículos e historial de registros.</div>
+          <div class="search-bar">
+            <input id="searchInput" type="text" placeholder="ej: 12.345.678-9, BBCC12, Pérez…">
+            <button id="searchBtn" class="btn btn-primary" style="width:auto;">Buscar</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Tipo</th><th>Fecha / hora</th><th>Identificador</th><th>Nombre / conductor</th><th>Mov.</th><th>Paso</th><th>Estado</th>
+            </tr></thead>
+            <tbody id="consultasTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== REPORTES ===== -->
+      <section data-view="reportes" class="view hidden">
+        <div class="card no-print">
+          <div class="section-head">
+            <div>
+              <h3>Reportes</h3>
+              <div class="card-sub">Reporte diario de tránsito fronterizo y estadísticas de la semana.</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button id="btnExportPasajerosCSV" class="btn btn-ghost btn-sm">Exportar pasajeros (Excel/CSV)</button>
+              <button id="btnExportVehiculosCSV" class="btn btn-ghost btn-sm">Exportar vehículos (Excel/CSV)</button>
+              <button id="btnImprimir" class="btn btn-primary btn-sm" style="width:auto;">Imprimir / PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Reporte diario — <span id="reporteFecha"></span></h3>
+          <div class="table-wrap" style="margin-top:10px;">
+            <table>
+              <thead><tr><th>Paso fronterizo</th><th>Entradas pasajeros</th><th>Salidas pasajeros</th><th>Entradas vehículos</th><th>Salidas vehículos</th><th>Alertas</th></tr></thead>
+              <tbody id="reporteDiarioBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Estadística semanal</h3>
+          <div class="card-sub">Mismo gráfico del panel general, incluido para fines de reporte.</div>
+          <div class="chart-wrap" id="weeklyChart2"></div>
+          <div class="legend">
+            <span><i style="background:var(--blue-500)"></i> Entradas</span>
+            <span><i style="background:var(--amber-500)"></i> Salidas</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== BITÁCORA ===== -->
+      <section data-view="bitacora" class="view hidden">
+        <div class="card no-print">
+          <h3>Bitácora de actividad</h3>
+          <div class="card-sub">Registro cronológico de acciones realizadas por los usuarios del sistema.</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fecha / hora</th><th>Usuario</th><th>Rol</th><th>Acción</th><th>Detalle</th></tr></thead>
+            <tbody id="bitacoraTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== ADMINISTRACIÓN ===== -->
+      <section data-view="admin" class="view hidden">
+        <form id="userForm" class="form-card">
+          <div class="section-head" style="margin-bottom:14px;"><h3>Crear usuario</h3></div>
+          <div class="form-grid">
+            <div class="field"><label>Usuario</label><input id="newUserUsername" type="text" required></div>
+            <div class="field span2"><label>Nombre completo</label><input id="newUserNombre" type="text" required></div>
+            <div class="field"><label>Contraseña</label><input id="newUserPass" type="text" required></div>
+            <div class="field span2">
+              <label>Rol asignado</label>
+              <select id="newUserRol" required>
+                <option>Administrador</option>
+                <option>Funcionario Aduana</option>
+                <option>Funcionario SAG / PDI</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-amber">Crear usuario</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="section-head"><h3 style="color:var(--navy-900); font-size:14px;">Usuarios del sistema</h3></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===== HELP MODAL ===== -->
+<div id="helpModal" class="modal hidden">
+  <div class="modal-card">
+    <button class="modal-close" id="helpClose">×</button>
+    <h3 id="helpTitle">Ayuda</h3>
+    <div id="helpBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------------
+   * UTILIDADES
+   * ------------------------------------------------------------- */
+  const $  = (sel, ctx) => (ctx || document).querySelector(sel);
+  const $$ = (sel, ctx) => Array.from((ctx || document).querySelectorAll(sel));
+
+  function escapeHtml(str){
+    return String(str == null ? '' : str).replace(/[&<>"']/g, c => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[c]));
+  }
+
+  function pad(n){ return n < 10 ? '0' + n : '' + n; }
+
+  function fmtTime(d){ return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function fmtDate(d){ return pad(d.getDate()) + '/' + pad(d.getMonth()+1) + '/' + d.getFullYear(); }
+  function fmtDateTime(d){ return fmtDate(d) + ' ' + fmtTime(d); }
+  function sameDay(d1, d2){
+    return d1.getFullYear()===d2.getFullYear() && d1.getMonth()===d2.getMonth() && d1.getDate()===d2.getDate();
+  }
+  function dayLabel(d){
+    return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()];
+  }
+  function calcEdad(fechaNacStr){
+    if(!fechaNacStr) return null;
+    const nac = new Date(fechaNacStr + 'T00:00:00');
+    if(isNaN(nac.getTime())) return null;
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - nac.getFullYear();
+    const m = hoy.getMonth() - nac.getMonth();
+    if(m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+    return edad;
+  }
+  function uid(){ return 'r' + Math.random().toString(36).slice(2,10); }
+
+  /* ---------------------------------------------------------------
+   * ESTADO (en memoria — sin localStorage)
+   * ------------------------------------------------------------- */
+  const PASOS = ['Los Libertadores','Cardenal Samoré','Chacalluta','Pino Hachado','Pajaritos'];
+
+  const ROLE_VIEWS = {
+    'Administrador': ['dashboard','pasajero','vehiculo','consultas','reportes','bitacora','admin'],
+    'Funcionario Aduana': ['dashboard','pasajero','vehiculo','consultas','reportes','bitacora'],
+    'Funcionario SAG / PDI': ['dashboard','consultas','reportes','bitacora']
+  };
+  const VIEW_LABELS = {
+    dashboard:'Panel General', pasajero:'Registrar Pasajero', vehiculo:'Registrar Vehículo',
+    consultas:'Consultas', reportes:'Reportes', bitacora:'Bitácora de Actividad', admin:'Administración de Usuarios'
+  };
+  const HELP_TEXT = {
+    dashboard: '<p>Vista general del paso fronterizo: pasajeros y vehículos del día, alertas activas, estado de integración con Aduanas/SAG/PDI y la cola de declaraciones pendientes de inspección.</p>',
+    pasajero: '<p>Registra el ingreso o salida de un pasajero. Si la fecha de nacimiento indica un menor de edad, se despliega el bloque de documentación migratoria (autorización notarial). El número de documento se valida automáticamente contra la lista de control (validación cruzada).</p>',
+    vehiculo: '<p>Registra la salida o admisión temporal de un vehículo particular según el Acuerdo Chileno-Argentino. El plazo se completa automáticamente: 180 días para turismo, 90 días para trámites diplomáticos.</p>',
+    consultas: '<p>Busque por nombre, número de documento o patente. Se muestran coincidencias en pasajeros, vehículos e historial combinado. Los documentos pueden aparecer enmascarados según el rol del usuario conectado, para proteger la confidencialidad de los datos.</p>',
+    reportes: '<p>Genere el reporte diario de tránsito por paso fronterizo y revise la estadística semanal. Puede exportar las tablas en formato CSV (compatible con Excel) o imprimir/generar un PDF con el botón correspondiente.</p>',
+    bitacora: '<p>Registro inmodificable de todas las acciones relevantes realizadas en el sistema: inicios de sesión, registros, alertas y cambios administrativos.</p>',
+    admin: '<p>Solo visible para el rol Administrador. Permite crear usuarios, asignarles un rol (con sus respectivos permisos) y activar o desactivar su acceso.</p>'
+  };
+
+  const state = {
+    currentUser: null,
+    users: [
+      {username:'admin', password:'admin123', nombre:'Administrador Sistema', rol:'Administrador', activo:true},
+      {username:'jfunc', password:'aduana123', nombre:'Juan Pérez Ibáñez', rol:'Funcionario Aduana', activo:true},
+      {username:'sagop', password:'sag123', nombre:'María Soto Vidal', rol:'Funcionario SAG / PDI', activo:true}
+    ],
+    passengers: [],
+    vehicles: [],
+    logs: [],
+    blacklistDoc: ['12.345.678-9','12345678-9'],
+    blacklistPlate: ['BBCC12']
+  };
+
+  function inBlacklist(list, value){
+    const norm = String(value||'').toUpperCase().replace(/\s+/g,'');
+    return list.some(v => v.toUpperCase().replace(/\s+/g,'') === norm);
+  }
+
+  /* ---------------------------------------------------------------
+   * DATOS DE EJEMPLO (últimos 6 días) — para poblar gráficos/reportes
+   * ------------------------------------------------------------- */
+  const NOMBRES = ['Pedro Soto','Camila Rojas','Martín Fernández','Lucía Gómez','Diego Herrera','Valentina Muñoz',
+    'Tomás Silva','Florencia Díaz','Joaquín Castro','Sofía Bravo','Agustín López','Javiera Torres'];
+  const CONDUCTORES = ['Roberto Aguilar','Mariana Pizarro','Cristóbal Vega','Antonella Reyes','Felipe Contreras'];
+
+  function seedData(){
+    for(let i = 6; i >= 1; i--){
+      const base = new Date();
+      base.setDate(base.getDate() - i);
+      const nPas = 6 + Math.floor(Math.random()*10);
+      for(let j = 0; j < nPas; j++){
+        const ts = new Date(base);
+        ts.setHours(8 + Math.floor(Math.random()*10), Math.floor(Math.random()*60));
+        const mov = Math.random() < 0.5 ? 'Entrada' : 'Salida';
+        const edad = 18 + Math.floor(Math.random()*50);
+        state.passengers.push({
+          id: uid(), ts, movimiento: mov,
+          nombre: NOMBRES[Math.floor(Math.random()*NOMBRES.length)],
+          tipoDoc: Math.random() < 0.5 ? 'Cédula de identidad' : 'Pasaporte',
+          numDoc: (10000000 + Math.floor(Math.random()*89999999)) + '-' + Math.floor(Math.random()*9),
+          nacionalidad: Math.random() < 0.6 ? 'Chilena' : 'Argentina',
+          edad, esMenor:false, paso: PASOS[Math.floor(Math.random()*PASOS.length)],
+          traeAlimentos: Math.random() < 0.12, traeMascota: Math.random() < 0.08,
+          alerta:false, detalleAlerta:'', revisado:true
+        });
+      }
+      const nVeh = 2 + Math.floor(Math.random()*6);
+      for(let k = 0; k < nVeh; k++){
+        const ts = new Date(base);
+        ts.setHours(8 + Math.floor(Math.random()*10), Math.floor(Math.random()*60));
+        state.vehicles.push({
+          id: uid(), ts, movimiento: Math.random() < 0.5 ? 'Entrada' : 'Salida',
+          patente: 'A' + (1000+Math.floor(Math.random()*8999)) + 'B',
+          tipoVehiculo:'Automóvil', conductor: CONDUCTORES[Math.floor(Math.random()*CONDUCTORES.length)],
+          conductorDoc:'9.'+Math.floor(Math.random()*999)+'.'+Math.floor(Math.random()*999)+'-K',
+          tramite:'turismo', plazoDias:180, paso: PASOS[Math.floor(Math.random()*PASOS.length)], alerta:false
+        });
+      }
+    }
+  }
+  seedData();
+
+  /* ---------------------------------------------------------------
+   * LOGIN / SESIÓN
+   * ------------------------------------------------------------- */
+  function addLog(accion, detalle){
+    state.logs.push({
+      ts: new Date(),
+      usuario: state.currentUser ? state.currentUser.nombre : '—',
+      rol: state.currentUser ? state.currentUser.rol : '—',
+      accion, detalle: detalle || ''
+    });
+    if(currentView === 'bitacora') renderBitacora();
+  }
+
+  function showAlert(type, message, autoHideMs){
+    const zone = $('#alertZone');
+    const div = document.createElement('div');
+    div.className = 'alert ' + type;
+    const icon = {error:'⛔', warning:'⚠', success:'✓', info:'ℹ'}[type] || '';
+    div.innerHTML = '<b>' + icon + '</b><span>' + message + '</span><button class="close" aria-label="Cerrar">×</button>';
+    div.querySelector('.close').addEventListener('click', () => div.remove());
+    zone.prepend(div);
+    if(autoHideMs){ setTimeout(() => div.remove(), autoHideMs); }
+  }
+
+  $('#loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const u = $('#loginUser').value.trim();
+    const p = $('#loginPass').value;
+    const found = state.users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+    const errEl = $('#loginError');
+    if(!found){
+      errEl.textContent = 'Usuario o contraseña incorrectos.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    if(!found.activo){
+      errEl.textContent = 'Esta cuenta se encuentra deshabilitada. Contacte al administrador.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    errEl.classList.add('hidden');
+    state.currentUser = found;
+    enterApp();
+  });
+
+  function enterApp(){
+    $('#loginScreen').classList.add('hidden');
+    $('#app').classList.remove('hidden');
+    $('#userName').textContent = state.currentUser.nombre;
+    $('#userRole').textContent = state.currentUser.rol;
+    buildNav();
+    addLog('Inicio de sesión');
+    switchView(ROLE_VIEWS[state.currentUser.rol][0]);
+  }
+
+  $('#logoutBtn').addEventListener('click', function(){
+    addLog('Cierre de sesión');
+    state.currentUser = null;
+    $('#app').classList.add('hidden');
+    $('#loginScreen').classList.remove('hidden');
+    $('#loginForm').reset();
+    $('#alertZone').innerHTML = '';
+  });
+
+  /* ---------------------------------------------------------------
+   * NAVEGACIÓN
+   * ------------------------------------------------------------- */
+  let currentView = 'dashboard';
+
+  function buildNav(){
+    const nav = $('#nav');
+    nav.innerHTML = '';
+    const views = ROLE_VIEWS[state.currentUser.rol] || [];
+    views.forEach(v => {
+      const btn = document.createElement('button');
+      btn.className = 'nav-item';
+      btn.dataset.view = v;
+      btn.innerHTML = '<span class="dot"></span>' + VIEW_LABELS[v];
+      btn.addEventListener('click', () => switchView(v));
+      nav.appendChild(btn);
+    });
+  }
+
+  const RENDERERS = {
+    dashboard: renderDashboard,
+    pasajero: renderPasajeroTable,
+    vehiculo: renderVehiculoTable,
+    consultas: renderConsultas,
+    reportes: renderReportes,
+    bitacora: renderBitacora,
+    admin: renderAdmin
+  };
+
+  function switchView(name){
+    if(!(ROLE_VIEWS[state.currentUser.rol] || []).includes(name)) return;
+    currentView = name;
+    $$('.view').forEach(v => v.classList.add('hidden'));
+    const target = $('section.view[data-view="' + name + '"]');
+    if(target) target.classList.remove('hidden');
+    $$('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+    $('#viewTitle').textContent = VIEW_LABELS[name];
+    if(RENDERERS[name]) RENDERERS[name]();
+  }
+
+  $('#menuToggle').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
+  $('#helpBtn').addEventListener('click', () => {
+    $('#helpTitle').textContent = 'Ayuda — ' + VIEW_LABELS[currentView];
+    $('#helpBody').innerHTML = HELP_TEXT[currentView] || '<p>Sin ayuda disponible para esta sección.</p>';
+    $('#helpModal').classList.remove('hidden');
+  });
+  $('#helpClose').addEventListener('click', () => $('#helpModal').classList.add('hidden'));
+  $('#helpModal').addEventListener('click', (e) => { if(e.target.id === 'helpModal') $('#helpModal').classList.add('hidden'); });
+
+  /* ---------------------------------------------------------------
+   * MÁSCARA DE DATOS SENSIBLES (confidencialidad por rol)
+   * ------------------------------------------------------------- */
+  function maskDoc(doc){
+    const rol = state.currentUser.rol;
+    if(rol === 'Administrador' || rol === 'Funcionario Aduana') return doc;
+    const s = String(doc);
+    if(s.length <= 4) return '••••';
+    return s.slice(0,2) + '•••••' + s.slice(-2);
+  }
+
+  /* ---------------------------------------------------------------
+   * SELECTS DE PASOS FRONTERIZOS
+   * ------------------------------------------------------------- */
+  function fillPasoSelect(sel){
+    sel.innerHTML = PASOS.map(p => '<option>' + p + '</option>').join('');
+  }
+  fillPasoSelect($('#pjPaso'));
+  fillPasoSelect($('#vhPaso'));
+
+  /* ---------------------------------------------------------------
+   * REGISTRO DE PASAJEROS (RF-01,02,03,04 / RF-19,20)
+   * ------------------------------------------------------------- */
+  $('#pjFechaNac').addEventListener('change', function(){
+    const edad = calcEdad(this.value);
+    const fs = $('#pjMenorFieldset');
+    if(edad !== null && edad < 18){
+      fs.classList.remove('hidden');
+      $('#pjEdadDisplay').textContent = edad;
+    } else {
+      fs.classList.add('hidden');
+    }
+  });
+
+  function validarDocumentoPasajero(tipo, num){
+    const v = num.trim();
+    if(v.length < 5) return {valid:false, msg:'El número de documento parece incompleto.'};
+    if(tipo === 'Cédula de identidad' && !/^[0-9.\-kK]{7,12}$/.test(v)){
+      return {valid:false, msg:'El formato de cédula de identidad no es válido (ej: 12.345.678-9).'};
+    }
+    if(tipo === 'Pasaporte' && !/^[A-Za-z0-9]{5,12}$/.test(v)){
+      return {valid:false, msg:'El formato de pasaporte no es válido.'};
+    }
+    return {valid:true};
+  }
+
+  $('#pjForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const tipoDoc = $('#pjTipoDoc').value;
+    const numDoc = $('#pjNumDoc').value;
+    const edad = calcEdad($('#pjFechaNac').value);
+
+    const docCheck = validarDocumentoPasajero(tipoDoc, numDoc);
+    if(!docCheck.valid){
+      showAlert('error', 'No se pudo registrar al pasajero: ' + docCheck.msg);
+      return;
+    }
+    if(edad === null){
+      showAlert('error', 'Ingrese una fecha de nacimiento válida.');
+      return;
+    }
+
+    const esMenor = edad < 18;
+    let detalleAlertaMenor = '';
+    if(esMenor){
+      const acomp = $('#pjAcompanante').value;
+      const autorizado = $('#pjAutorizacionNotarial').checked;
+      if(acomp !== 'ambos' && !autorizado){
+        detalleAlertaMenor = 'Menor de edad sin autorización notarial registrada.';
+      }
+    }
+
+    const enBlacklist = inBlacklist(state.blacklistDoc, numDoc);
+    const alerta = enBlacklist || !!detalleAlertaMenor;
+    const detalleAlerta = [enBlacklist ? 'Documento con registro en lista de control PDI.' : '', detalleAlertaMenor]
+      .filter(Boolean).join(' ');
+
+    const record = {
+      id: uid(), ts: new Date(), movimiento: $('#pjMovimiento').value,
+      nombre: $('#pjNombre').value.trim(), tipoDoc, numDoc: numDoc.trim(),
+      nacionalidad: $('#pjNacionalidad').value, edad, esMenor,
+      paso: $('#pjPaso').value,
+      traeAlimentos: $('#pjAlimentos').checked, traeMascota: $('#pjMascota').checked,
+      alerta, detalleAlerta, revisado: !(($('#pjAlimentos').checked || $('#pjMascota').checked || alerta))
+    };
+    state.passengers.unshift(record);
+    addLog('Registro de pasajero (' + record.movimiento + ')', record.nombre + ' — ' + record.numDoc);
+
+    if(alerta){
+      showAlert('error', 'Alerta de validación cruzada para <b>' + escapeHtml(record.nombre) + '</b>: ' + escapeHtml(detalleAlerta) + ' Se ha marcado para revisión.');
+    } else {
+      showAlert('success', 'Pasajero <b>' + escapeHtml(record.nombre) + '</b> registrado correctamente (' + record.movimiento + ', ' + record.paso + ').', 5000);
+    }
+    if(record.traeAlimentos || record.traeMascota){
+      showAlert('warning', 'Pasajero con declaración SAG pendiente de inspección física.', 5000);
+    }
+
+    this.reset();
+    $('#pjMenorFieldset').classList.add('hidden');
+    renderPasajeroTable();
+    renderDashboard();
+  });
+
+  function renderPasajeroTable(){
+    const today = new Date();
+    const rows = state.passengers.filter(p => sameDay(p.ts, today)).slice(0, 50);
+    const body = $('#pjTableBody');
+    if(rows.length === 0){
+      body.innerHTML = '<tr><td colspan="8" class="table-empty">Aún no hay registros de pasajeros hoy.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map(r => `
+      <tr>
+        <td class="mono">${fmtTime(r.ts)}</td>
+        <td><span class="badge ${r.movimiento === 'Entrada' ? 'entrada' : 'salida'}">${r.movimiento}</span></td>
+        <td>${escapeHtml(r.nombre)}</td>
+        <td class="mono">${escapeHtml(maskDoc(r.numDoc))}</td>
+        <td>${escapeHtml(r.nacionalidad)}</td>
+        <td>${r.edad}${r.esMenor ? ' (menor)' : ''}</td>
+        <td>${escapeHtml(r.paso)}</td>
+        <td>${estadoBadge(r)}</td>
+      </tr>`).join('');
+  }
+
+  function estadoBadge(r){
+    if(r.alerta) return '<span class="badge alerta">Alerta</span>';
+    if((r.traeAlimentos || r.traeMascota) && !r.revisado) return '<span class="badge pendiente">Pend. SAG</span>';
+    return '<span class="badge ok">OK</span>';
+  }
+
+  /* ---------------------------------------------------------------
+   * REGISTRO DE VEHÍCULOS (RF-05,06)
+   * ------------------------------------------------------------- */
+  function updatePlazo(){
+    const tramite = $('#vhTramite').value;
+    $('#vhPlazoDisplay').value = tramite === 'diplomatico' ? '90 días corridos' : '180 días corridos';
+  }
+  $('#vhTramite').addEventListener('change', updatePlazo);
+  updatePlazo();
+
+  function validarPatente(p){
+    const v = p.trim().toUpperCase().replace(/\s+/g,'');
+    return /^[A-Z0-9]{5,7}$/.test(v);
+  }
+
+  $('#vhForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const patente = $('#vhPatente').value.toUpperCase().trim();
+    if(!validarPatente(patente)){
+      showAlert('error', 'La patente ingresada no tiene un formato válido.');
+      return;
+    }
+    const tramite = $('#vhTramite').value;
+    const alerta = inBlacklist(state.blacklistPlate, patente);
+    const record = {
+      id: uid(), ts: new Date(), movimiento: $('#vhMovimiento').value, patente,
+      tipoVehiculo: $('#vhTipoVehiculo').value,
+      conductor: $('#vhConductorNombre').value.trim(), conductorDoc: $('#vhConductorDoc').value.trim(),
+      tramite, plazoDias: tramite === 'diplomatico' ? 90 : 180,
+      paso: $('#vhPaso').value, alerta
+    };
+    state.vehicles.unshift(record);
+    addLog('Registro de vehículo (' + record.movimiento + ')', record.patente + ' — ' + record.conductor);
+
+    if(alerta){
+      showAlert('error', 'Alerta: el vehículo <b>' + escapeHtml(patente) + '</b> figura en la lista de control. Se requiere revisión de Aduanas/PDI.');
+    } else {
+      showAlert('success', 'Vehículo <b>' + escapeHtml(patente) + '</b> registrado correctamente (' + record.movimiento + ', ' + record.paso + ').', 5000);
+    }
+
+    this.reset();
+    updatePlazo();
+    renderVehiculoTable();
+    renderDashboard();
+  });
+
+  function renderVehiculoTable(){
+    const today = new Date();
+    const rows = state.vehicles.filter(v => sameDay(v.ts, today)).slice(0, 50);
+    const body = $('#vhTableBody');
+    if(rows.length === 0){
+      body.innerHTML = '<tr><td colspan="9" class="table-empty">Aún no hay registros de vehículos hoy.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map(r => `
+      <tr>
+        <td class="mono">${fmtTime(r.ts)}</td>
+        <td><span class="badge ${r.movimiento === 'Entrada' ? 'entrada' : 'salida'}">${r.movimiento}</span></td>
+        <td class="mono">${escapeHtml(r.patente)}</td>
+        <td>${escapeHtml(r.tipoVehiculo)}</td>
+        <td>${escapeHtml(r.conductor)}</td>
+        <td>${r.tramite === 'diplomatico' ? 'Diplomático' : 'Turismo'}</td>
+        <td>${r.plazoDias} días</td>
+        <td>${escapeHtml(r.paso)}</td>
+        <td>${r.alerta ? '<span class="badge alerta">Alerta</span>' : '<span class="badge ok">OK</span>'}</td>
+      </tr>`).join('');
+  }
+
+  /* ---------------------------------------------------------------
+   * CONSULTAS (RF-07,08,09)
+   * ------------------------------------------------------------- */
+  function buildCombinedHistory(){
+    const pas = state.passengers.map(p => ({
+      tipo:'Pasajero', ts:p.ts, id:maskDoc(p.numDoc), nombre:p.nombre, mov:p.movimiento, paso:p.paso,
+      estado: p.alerta ? 'alerta' : ((p.traeAlimentos||p.traeMascota) && !p.revisado ? 'pendiente' : 'ok')
+    }));
+    const veh = state.vehicles.map(v => ({
+      tipo:'Vehículo', ts:v.ts, id:v.patente, nombre:v.conductor, mov:v.movimiento, paso:v.paso,
+      estado: v.alerta ? 'alerta' : 'ok'
+    }));
+    return pas.concat(veh).sort((a,b) => b.ts - a.ts);
+  }
+
+  function renderConsultas(){
+    const q = $('#searchInput').value.trim().toUpperCase();
+    let rows = buildCombinedHistory();
+    if(q){
+      rows = rows.filter(r =>
+        String(r.id).toUpperCase().includes(q) ||
+        String(r.nombre).toUpperCase().includes(q)
+      );
+      // también buscar sin enmascarar en pasajeros para roles con acceso completo
+      if(rows.length === 0){
+        const fullMatch = state.passengers.filter(p => p.numDoc.toUpperCase().includes(q) || p.nombre.toUpperCase().includes(q))
+          .map(p => ({tipo:'Pasajero', ts:p.ts, id:maskDoc(p.numDoc), nombre:p.nombre, mov:p.movimiento, paso:p.paso,
+            estado: p.alerta?'alerta':((p.traeAlimentos||p.traeMascota)&&!p.revisado?'pendiente':'ok')}));
+        rows = fullMatch;
+      }
+    } else {
+      rows = rows.slice(0, 25);
+    }
+    const body = $('#consultasTableBody');
+    if(rows.length === 0){
+      body.innerHTML = '<tr><td colspan="7" class="table-empty">No se encontraron coincidencias.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.tipo}</td>
+        <td class="mono">${fmtDateTime(r.ts)}</td>
+        <td class="mono">${escapeHtml(r.id)}</td>
+        <td>${escapeHtml(r.nombre)}</td>
+        <td><span class="badge ${r.mov === 'Entrada' ? 'entrada' : 'salida'}">${r.mov}</span></td>
+        <td>${escapeHtml(r.paso)}</td>
+        <td>${r.estado === 'alerta' ? '<span class="badge alerta">Alerta</span>' : (r.estado === 'pendiente' ? '<span class="badge pendiente">Pendiente</span>' : '<span class="badge ok">OK</span>')}</td>
+      </tr>`).join('');
+  }
+  $('#searchBtn').addEventListener('click', renderConsultas);
+  $('#searchInput').addEventListener('keyup', e => { if(e.key === 'Enter') renderConsultas(); });
+
+  /* ---------------------------------------------------------------
+   * DASHBOARD: KPIs, flujo, gráfico, integraciones, pendientes
+   * ------------------------------------------------------------- */
+  function renderDashboard(){
+    const today = new Date();
+    const pasHoy = state.passengers.filter(p => sameDay(p.ts, today));
+    const vehHoy = state.vehicles.filter(v => sameDay(v.ts, today));
+    const entradasP = pasHoy.filter(p => p.movimiento === 'Entrada').length;
+    const salidasP = pasHoy.filter(p => p.movimiento === 'Salida').length;
+    const entradasV = vehHoy.filter(v => v.movimiento === 'Entrada').length;
+    const salidasV = vehHoy.filter(v => v.movimiento === 'Salida').length;
+    const alertas = pasHoy.filter(p => p.alerta).length + vehHoy.filter(v => v.alerta).length;
+    const pendientes = pasHoy.filter(p => (p.traeAlimentos || p.traeMascota) && !p.revisado).length;
+
+    $('#kpiPasajeros').textContent = pasHoy.length;
+    $('#kpiPasajerosDelta').textContent = entradasP + ' entradas · ' + salidasP + ' salidas';
+    $('#kpiVehiculos').textContent = vehHoy.length;
+    $('#kpiVehiculosDelta').textContent = entradasV + ' entradas · ' + salidasV + ' salidas';
+    $('#kpiAlertas').textContent = alertas;
+    $('#kpiPendientes').textContent = pendientes;
+
+    // Flujo del paso fronterizo
+    const validados = pasHoy.length; // todos pasan validación de documento al registrarse
+    const revision = pasHoy.filter(p => p.traeAlimentos || p.traeMascota || p.alerta).length;
+    const completados = pasHoy.length - alertas;
+    const flow = $('#flowDiagram');
+    flow.innerHTML = `
+      <div class="flow-stage">
+        <div class="fs-label">Arribo al paso</div>
+        <div class="fs-value">${pasHoy.length}</div>
+        <div class="fs-note">pasajeros registrados hoy</div>
+      </div>
+      <div class="flow-stage">
+        <div class="fs-label">Documentos validados</div>
+        <div class="fs-value">${validados}</div>
+        <div class="fs-note">cédula / pasaporte verificado</div>
+      </div>
+      <div class="flow-stage ${revision > 0 ? 'warn' : ''}">
+        <div class="fs-label">Revisión SAG / PDI</div>
+        <div class="fs-value">${revision}</div>
+        <div class="fs-note">declaraciones o alertas</div>
+      </div>
+      <div class="flow-stage ${alertas>0?'warn':'ok'}">
+        <div class="fs-label">Cruce completado</div>
+        <div class="fs-value">${completados}</div>
+        <div class="fs-note">${alertas} con alerta activa</div>
+      </div>`;
+
+    // Gráfico semanal
+    const weekData = buildWeeklyData();
+    renderWeeklyChart('#weeklyChart', weekData);
+    renderWeeklyChart('#weeklyChart2', weekData);
+
+    // Integraciones
+    $('#integPanel').innerHTML = ['Aduanas (SNA)', 'PDI', 'SAG'].map(name => `
+      <div class="integ-row">
+        <span class="integ-name">${name}</span>
+        <span class="integ-status"><span class="dot"></span>Conectado
+          <span class="integ-sync">Sincronizado hace ${1 + Math.floor(Math.random()*9)} min</span>
+        </span>
+      </div>`).join('');
+
+    // Pendientes
+    const pendList = pasHoy.filter(p => (p.traeAlimentos || p.traeMascota) && !p.revisado);
+    const pendPanel = $('#pendingPanel');
+    if(pendList.length === 0){
+      pendPanel.innerHTML = '<div class="empty-note">No hay declaraciones pendientes de revisión.</div>';
+    } else {
+      pendPanel.innerHTML = pendList.slice(0,6).map(p => `
+        <div class="pending-item">
+          <div>
+            <div class="pi-name">${escapeHtml(p.nombre)}</div>
+            <div class="pi-meta">${p.traeAlimentos ? 'Alimentos' : ''}${p.traeAlimentos && p.traeMascota ? ' · ' : ''}${p.traeMascota ? 'Mascota' : ''} · ${escapeHtml(p.paso)}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" data-revisar="${p.id}">Marcar revisado</button>
+        </div>`).join('');
+      $$('#pendingPanel [data-revisar]').forEach(btn => {
+        btn.addEventListener('click', function(){
+          const rec = state.passengers.find(p => p.id === this.dataset.revisar);
+          if(rec){
+            rec.revisado = true;
+            addLog('Revisión SAG/PDI completada', rec.nombre + ' — ' + rec.numDoc);
+            showAlert('success', 'Declaración de ' + escapeHtml(rec.nombre) + ' marcada como revisada.', 4000);
+            renderDashboard();
+            if(currentView === 'pasajero') renderPasajeroTable();
+          }
+        });
+      });
+    }
+  }
+
+  function buildWeeklyData(){
+    const days = [];
+    for(let i = 6; i >= 0; i--){
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const entradas = state.passengers.filter(p => sameDay(p.ts, d) && p.movimiento === 'Entrada').length;
+      const salidas = state.passengers.filter(p => sameDay(p.ts, d) && p.movimiento === 'Salida').length;
+      days.push({label: dayLabel(d), entradas, salidas});
+    }
+    return days;
+  }
+
+  function renderWeeklyChart(selector, data){
+    const el = $(selector);
+    if(!el) return;
+    const max = Math.max(1, ...data.map(d => Math.max(d.entradas, d.salidas)));
+    el.innerHTML = data.map(d => `
+      <div class="chart-day">
+        <div class="chart-bars">
+          <div class="chart-bar entrada" style="height:${Math.round((d.entradas/max)*128)}px" title="${d.entradas} entradas"></div>
+          <div class="chart-bar salida" style="height:${Math.round((d.salidas/max)*128)}px" title="${d.salidas} salidas"></div>
+        </div>
+        <span class="lbl">${d.label}</span>
+      </div>`).join('');
+  }
+
+  /* ---------------------------------------------------------------
+   * REPORTES (RF-10,11) + EXPORTACIÓN CSV + IMPRESIÓN
+   * ------------------------------------------------------------- */
+  function renderReportes(){
+    $('#reporteFecha').textContent = fmtDate(new Date());
+    const today = new Date();
+    const pasHoy = state.passengers.filter(p => sameDay(p.ts, today));
+    const vehHoy = state.vehicles.filter(v => sameDay(v.ts, today));
+    const body = $('#reporteDiarioBody');
+    const rows = PASOS.map(paso => {
+      const pp = pasHoy.filter(p => p.paso === paso);
+      const vv = vehHoy.filter(v => v.paso === paso);
+      return {
+        paso,
+        entP: pp.filter(p => p.movimiento === 'Entrada').length,
+        salP: pp.filter(p => p.movimiento === 'Salida').length,
+        entV: vv.filter(v => v.movimiento === 'Entrada').length,
+        salV: vv.filter(v => v.movimiento === 'Salida').length,
+        alertas: pp.filter(p => p.alerta).length + vv.filter(v => v.alerta).length
+      };
+    });
+    body.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.paso}</td><td class="mono">${r.entP}</td><td class="mono">${r.salP}</td>
+        <td class="mono">${r.entV}</td><td class="mono">${r.salV}</td>
+        <td>${r.alertas > 0 ? '<span class="badge alerta">' + r.alertas + '</span>' : '<span class="badge ok">0</span>'}</td>
+      </tr>`).join('');
+    renderWeeklyChart('#weeklyChart2', buildWeeklyData());
+  }
+
+  function downloadCSV(filename, header, rows){
+    const csv = [header].concat(rows).map(r => r.map(v => {
+      const s = String(v == null ? '' : v).replace(/"/g, '""');
+      return /[",;\n]/.test(s) ? '"' + s + '"' : s;
+    }).join(';')).join('\r\n');
+    const blob = new Blob(["\ufeff" + csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  $('#btnExportPasajerosCSV').addEventListener('click', function(){
+    const rows = state.passengers.map(p => [fmtDateTime(p.ts), p.movimiento, p.nombre, p.numDoc, p.nacionalidad, p.edad, p.paso, p.alerta ? 'Alerta' : 'OK']);
+    downloadCSV('SIGA_pasajeros.csv', ['Fecha/Hora','Movimiento','Nombre','Documento','Nacionalidad','Edad','Paso','Estado'], rows);
+    addLog('Exportación de reporte', 'Pasajeros (CSV)');
+    showAlert('info', 'Reporte de pasajeros exportado en formato CSV (compatible con Excel).', 4000);
+  });
+  $('#btnExportVehiculosCSV').addEventListener('click', function(){
+    const rows = state.vehicles.map(v => [fmtDateTime(v.ts), v.movimiento, v.patente, v.tipoVehiculo, v.conductor, v.tramite, v.plazoDias, v.paso, v.alerta ? 'Alerta' : 'OK']);
+    downloadCSV('SIGA_vehiculos.csv', ['Fecha/Hora','Movimiento','Patente','Tipo','Conductor','Trámite','Plazo (días)','Paso','Estado'], rows);
+    addLog('Exportación de reporte', 'Vehículos (CSV)');
+    showAlert('info', 'Reporte de vehículos exportado en formato CSV (compatible con Excel).', 4000);
+  });
+  $('#btnImprimir').addEventListener('click', function(){
+    addLog('Impresión de reporte');
+    window.print();
+  });
+
+  /* ---------------------------------------------------------------
+   * BITÁCORA (RF-18)
+   * ------------------------------------------------------------- */
+  function renderBitacora(){
+    const body = $('#bitacoraTableBody');
+    const rows = state.logs.slice().reverse().slice(0, 100);
+    if(rows.length === 0){
+      body.innerHTML = '<tr><td colspan="5" class="table-empty">Sin actividad registrada.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map(l => `
+      <tr>
+        <td class="mono">${fmtDateTime(l.ts)}</td>
+        <td>${escapeHtml(l.usuario)}</td>
+        <td>${escapeHtml(l.rol)}</td>
+        <td>${escapeHtml(l.accion)}</td>
+        <td>${escapeHtml(l.detalle)}</td>
+      </tr>`).join('');
+  }
+
+  /* ---------------------------------------------------------------
+   * ADMINISTRACIÓN DE USUARIOS (RF-12,13)
+   * ------------------------------------------------------------- */
+  function renderAdmin(){
+    const body = $('#usersTableBody');
+    body.innerHTML = state.users.map(u => `
+      <tr>
+        <td class="mono">${escapeHtml(u.username)}</td>
+        <td>${escapeHtml(u.nombre)}</td>
+        <td>
+          <select data-role-for="${escapeHtml(u.username)}" ${u.username === state.currentUser.username ? 'disabled' : ''}>
+            ${['Administrador','Funcionario Aduana','Funcionario SAG / PDI'].map(r => `<option ${r===u.rol?'selected':''}>${r}</option>`).join('')}
+          </select>
+        </td>
+        <td>${u.activo ? '<span class="badge ok">Activo</span>' : '<span class="badge alerta">Inactivo</span>'}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" data-toggle="${escapeHtml(u.username)}" ${u.username === state.currentUser.username ? 'disabled' : ''}>
+            ${u.activo ? 'Deshabilitar' : 'Habilitar'}
+          </button>
+        </td>
+      </tr>`).join('');
+
+    $$('#usersTableBody [data-role-for]').forEach(sel => {
+      sel.addEventListener('change', function(){
+        const user = state.users.find(u => u.username === this.dataset.roleFor);
+        if(user){
+          const prevRol = user.rol;
+          user.rol = this.value;
+          addLog('Cambio de rol', user.username + ': ' + prevRol + ' → ' + user.rol);
+          showAlert('success', 'Rol de ' + escapeHtml(user.nombre) + ' actualizado a ' + escapeHtml(user.rol) + '.', 4000);
+        }
+      });
+    });
+    $$('#usersTableBody [data-toggle]').forEach(btn => {
+      btn.addEventListener('click', function(){
+        const user = state.users.find(u => u.username === this.dataset.toggle);
+        if(user){
+          user.activo = !user.activo;
+          addLog(user.activo ? 'Usuario habilitado' : 'Usuario deshabilitado', user.username);
+          renderAdmin();
+        }
+      });
+    });
+  }
+
+  $('#userForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const username = $('#newUserUsername').value.trim();
+    if(state.users.some(u => u.username.toLowerCase() === username.toLowerCase())){
+      showAlert('error', 'Ya existe un usuario con ese nombre.');
+      return;
+    }
+    const user = {
+      username, password: $('#newUserPass').value,
+      nombre: $('#newUserNombre').value.trim(), rol: $('#newUserRol').value, activo: true
+    };
+    state.users.push(user);
+    addLog('Usuario creado', username + ' (' + user.rol + ')');
+    showAlert('success', 'Usuario <b>' + escapeHtml(username) + '</b> creado con rol ' + escapeHtml(user.rol) + '.', 4000);
+    this.reset();
+    renderAdmin();
+  });
+
+})();
+</script>
+</body>
+</html>
